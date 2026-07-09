@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Campus Elite — Network Demo</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(139,92,246,0.3), transparent 70%),
+      radial-gradient(ellipse 70% 30% at 100% 30%, rgba(45,63,231,0.2), transparent 60%),
+      linear-gradient(180deg, #14183F 0%, #0B0E2C 60%, #06081C 100%);
+    color: #F8FAFF;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display","SF Pro Text","Segoe UI", system-ui, sans-serif;
+  }
+  #root { max-width: 460px; margin: 0 auto; min-height: 100vh; position: relative; }
+  .scroll { padding: 12px 16px 96px; }
+  .row { display: flex; align-items: center; }
+  .between { justify-content: space-between; }
+  .gap { gap: 10px; }
+  .muted { color: rgba(255,255,255,0.6); }
+  .card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .lbl { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+  .h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+  .h2 { font-size: 16px; font-weight: 700; }
+  .sub { font-size: 12px; color: rgba(255,255,255,0.62); }
+  .avatar {
+    border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: white; overflow: hidden; position: relative;
+  }
+  .btn {
+    border: none; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 700;
+    color: white; cursor: pointer; width: 100%;
+    background: linear-gradient(135deg, #8B5CF6, #2D3FE7);
+    box-shadow: 0 6px 16px rgba(139,92,246,0.3);
+  }
+  .btn.ghost { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); box-shadow: none; }
+  .btn.green { background: linear-gradient(135deg, #4ADE80, #22C55E); box-shadow: none; color: #06210F; }
+  .btn.pink { background: linear-gradient(135deg, #FF3D8A, #8B5CF6); box-shadow: none; }
+  .btn.sm { padding: 8px 12px; font-size: 12px; width: auto; }
+  .btn:disabled { opacity: 0.5; }
+  .input {
+    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 11px; padding: 12px 14px; color: white; font-size: 14px; outline: none; margin-top: 8px;
+  }
+  .input::placeholder { color: rgba(255,255,255,0.4); }
+  .badge-chip {
+    display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 100px;
+    font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.14);
+  }
+  .pill { padding: 4px 9px; border-radius: 100px; font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+  .pill.net { background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); color: #C4B5FD; }
+  .pill.admin { background: rgba(255,181,71,0.15); border: 1px solid rgba(255,181,71,0.4); color: #FFB547; }
+  .tabbar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 460px; display: flex; justify-content: space-around;
+    background: rgba(8,10,30,0.92); backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tab { flex: 1; text-align: center; padding: 6px 2px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.45); cursor: pointer; }
+  .tab.on { color: #C4B5FD; }
+  .tab .ic { font-size: 18px; display: block; margin-bottom: 2px; }
+  .tab .nd { position: absolute; }
+  .fi { display: flex; gap: 11px; padding: 11px 13px; margin-bottom: 8px; }
+  .toggle { width: 44px; height: 26px; border-radius: 100px; background: rgba(255,255,255,0.15); position: relative; flex-shrink: 0; cursor: pointer; transition: .15s; }
+  .toggle.on { background: linear-gradient(135deg, #8B5CF6, #2D3FE7); }
+  .toggle::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:white; transition:.15s; }
+  .toggle.on::after { left: 21px; }
+  .overlay { position: fixed; inset: 0; background: rgba(4,5,18,0.7); backdrop-filter: blur(4px); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+  .sheet {
+    width: 100%; max-width: 460px; background: linear-gradient(180deg,#14183F,#0B0E2C);
+    border-radius: 24px 24px 0 0; border-top: 1px solid rgba(255,255,255,0.14);
+    max-height: 88vh; overflow-y: auto; padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
+  }
+  .grab { width: 40px; height: 4px; border-radius: 100px; background: rgba(255,255,255,0.25); margin: 0 auto 14px; }
+  .toast {
+    position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%); z-index: 100;
+    background: rgba(8,10,30,0.96); border: 1px solid rgba(255,255,255,0.16); color: white;
+    padding: 11px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; max-width: 90%;
+  }
+  .sechead { display: flex; justify-content: space-between; align-items: center; margin: 20px 2px 10px; }
+  .empty { text-align: center; color: rgba(255,255,255,0.45); font-size: 13px; padding: 30px 10px; }
+  .dot-red { width: 8px; height: 8px; border-radius: 50%; background: #FF3D8A; position: absolute; top: 4px; right: 22px; }
+  a { color: #C4B5FD; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const SUPABASE_URL = "https://ldqabveiqsjfiwpnbtys.supabase.co";
+const SUPABASE_KEY = "sb_publishable_9lzn1_aO25VvgESc0Gn1Rg_Cg-vEqgg";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const BADGES = {
+  party:      { i: "🎉", n: "Party PAS" },
+  trip:       { i: "✈️", n: "Trip PAS" },
+  bcr:        { i: "📣", n: "BCR" },
+  cc:         { i: "🎥", n: "Content Creator" },
+  fc:         { i: "🎓", n: "Freshman Class" },
+  sc:         { i: "⭐", n: "Student Coord." },
+  varsity:    { i: "🏆", n: "Varsity" },
+  varsity_sc: { i: "🎖️", n: "Varsity SC" },
+};
+const GRADS = ["#8B5CF6,#2D3FE7","#FF3D8A,#8B5CF6","#4ADE80,#06B6D4","#FFB547,#FF8A47","#06B6D4,#2D3FE7"];
+function gradFor(id){ let s=0; for(const c of (id||"")) s+=c.charCodeAt(0); return GRADS[s%GRADS.length]; }
+function initials(name){ return (name||"?").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase(); }
+
+function Avatar({ id, name, url, size=42, radius }) {
+  const r = radius || Math.round(size*0.3);
+  return (
+    <div className="avatar" style={{width:size,height:size,fontSize:size*0.36,borderRadius:r,background:`linear-gradient(135deg,${gradFor(id)})`}}>
+      {url ? <img src={url} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}}/> : initials(name)}
+    </div>
+  );
+}
+
+function BadgeRow({ badges }) {
+  const keys = Object.keys(badges||{}).filter(k=>badges[k]);
+  if (!keys.length) return <div className="sub" style={{marginTop:6}}>No badges yet</div>;
+  return (
+    <div className="row gap" style={{flexWrap:"wrap",marginTop:8}}>
+      {keys.map(k => BADGES[k] && (
+        <span key={k} className="badge-chip">{BADGES[k].i} {BADGES[k].n}</span>
+      ))}
+    </div>
+  );
+}
+
+// ---------- AUTH ----------
+function Auth() {
+  const [mode, setMode] = useState("login");
+  const [f, setF] = useState({ name:"", email:"", password:"", university:"" });
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const upd = k => e => setF({ ...f, [k]: e.target.value });
+
+  async function go() {
+    setErr(""); setBusy(true);
+    try {
+      if (mode === "signup") {
+        if (!f.name || !f.email || !f.password) { setErr("Name, email and password are required."); setBusy(false); return; }
+        const { error } = await sb.auth.signUp({
+          email: f.email, password: f.password,
+          options: { data: { name: f.name, university: f.university } }
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email: f.email, password: f.password });
+        if (error) throw error;
+      }
+    } catch (e) { setErr(e.message || "Something went wrong."); }
+    setBusy(false);
+  }
+
+  return (
+    <div className="scroll" style={{paddingTop:70}}>
+      <div style={{textAlign:"center",marginBottom:28}}>
+        <div className="avatar" style={{width:60,height:60,margin:"0 auto 14px",borderRadius:18,fontSize:24,background:"linear-gradient(135deg,#8B5CF6,#2D3FE7)"}}>CE</div>
+        <div className="h1">Campus Elite</div>
+        <div className="sub" style={{marginTop:4}}>Network Demo</div>
+      </div>
+      <div className="card">
+        <div className="row" style={{background:"rgba(0,0,0,0.3)",borderRadius:12,padding:4,marginBottom:14}}>
+          {["login","signup"].map(m=>(
+            <div key={m} onClick={()=>{setMode(m);setErr("")}} style={{flex:1,textAlign:"center",padding:"9px",borderRadius:9,fontSize:12,fontWeight:700,cursor:"pointer",
+              background: mode===m ? "linear-gradient(135deg,#8B5CF6,#2D3FE7)" : "transparent",
+              color: mode===m ? "white" : "rgba(255,255,255,0.6)"}}>
+              {m==="login"?"Log in":"Sign up"}
+            </div>
+          ))}
+        </div>
+        {mode==="signup" && <input className="input" placeholder="Full name" value={f.name} onChange={upd("name")} />}
+        {mode==="signup" && <input className="input" placeholder="University" value={f.university} onChange={upd("university")} />}
+        <input className="input" placeholder="Email" type="email" autoCapitalize="none" value={f.email} onChange={upd("email")} />
+        <input className="input" placeholder="Password" type="password" value={f.password} onChange={upd("password")} />
+        {err && <div style={{color:"#FF7DA8",fontSize:12,marginTop:10}}>{err}</div>}
+        <button className="btn" style={{marginTop:14}} disabled={busy} onClick={go}>
+          {busy ? "Please wait…" : mode==="login" ? "Log in" : "Create account"}
+        </button>
+      </div>
+      <div className="sub" style={{textAlign:"center",marginTop:16,lineHeight:1.5}}>
+        Sign up appears in the network search once you're in.<br/>Everyone starts with 1,000 CE Points.
+      </div>
+    </div>
+  );
+}
+
+// ---------- MAIN APP ----------
+function App() {
+  const [session, setSession] = useState(null);
+  const [me, setMe] = useState(null);
+  const [priv, setPriv] = useState(null);
+  const [tab, setTab] = useState("feed");
+  const [feed, setFeed] = useState([]);
+  const [notifs, setNotifs] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [query, setQuery] = useState("");
+  const [openId, setOpenId] = useState(null);
+  const [toast, setToast] = useState("");
+  const toastRef = useRef();
+
+  function flash(m){ setToast(m); clearTimeout(toastRef.current); toastRef.current=setTimeout(()=>setToast(""),2600); }
+
+  useEffect(() => {
+    sb.auth.getSession().then(({data})=>setSession(data.session));
+    const { data:subn } = sb.auth.onAuthStateChange((_e,s)=>setSession(s));
+    return ()=>subn.subscription.unsubscribe();
+  }, []);
+
+  const uid = session?.user?.id;
+
+  const loadMe = useCallback(async ()=>{
+    if(!uid) return;
+    const { data:p } = await sb.from("profiles").select("*").eq("id",uid).maybeSingle();
+    setMe(p);
+    const { data:pv } = await sb.from("user_private").select("*").eq("user_id",uid).maybeSingle();
+    setPriv(pv);
+  },[uid]);
+
+  const loadFeed = useCallback(async ()=>{
+    const { data } = await sb.from("activity_events")
+      .select("*, actor:profiles!activity_events_actor_id_fkey(id,name,avatar_url,badges,role), target:profiles!activity_events_target_id_fkey(name)")
+      .order("created_at",{ascending:false}).limit(60);
+    setFeed(data||[]);
+  },[]);
+
+  const loadNotifs = useCallback(async ()=>{
+    if(!uid) return;
+    const { data } = await sb.from("notifications")
+      .select("*, actor:profiles!notifications_actor_id_fkey(id,name,avatar_url,role)")
+      .eq("recipient_id",uid).order("created_at",{ascending:false}).limit(40);
+    setNotifs(data||[]);
+  },[uid]);
+
+  const loadUsers = useCallback(async (q)=>{
+    const { data } = await sb.rpc("search_users",{ q: q||"" });
+    setUsers(data||[]);
+  },[]);
+
+  useEffect(()=>{ if(uid){ loadMe(); loadFeed(); loadNotifs(); loadUsers(""); sb.from("activities").select("*").then(({data})=>setActivities(data||[])); } },[uid]);
+
+  // realtime
+  useEffect(()=>{
+    if(!uid) return;
+    const ch = sb.channel("live-"+uid)
+      .on("postgres_changes",{event:"INSERT",schema:"public",table:"activity_events"},()=>{ loadFeed(); loadMe(); })
+      .on("postgres_changes",{event:"*",schema:"public",table:"notifications",filter:`recipient_id=eq.${uid}`},()=>{ loadNotifs(); loadMe(); })
+      .subscribe();
+    return ()=>sb.removeChannel(ch);
+  },[uid,loadFeed,loadNotifs,loadMe]);
+
+  if (!session) return <Auth/>;
+  if (!me) return <div className="empty" style={{paddingTop:80}}>Loading your profile…</div>;
+
+  const unread = notifs.filter(n=>!n.read).length;
+
+  async function act(fn, okMsg){ const {data,error}=await fn(); if(error){flash(error.message);return;} if(data&&data.error){flash(errMsg(data.error,data));return;} if(okMsg)flash(okMsg); return data; }
+
+  function errMsg(code,d){
+    const map={ unavailable:"That member isn't accepting requests right now.", already_pending:"Request already pending.",
+      already_connected:"You're already connected.", not_ce_connected:"CE Connect required to send points.",
+      insufficient:"Not enough CE Points.", ignored:"They ignored a recent request — try again in 2 days.",
+      blocked:"Unavailable.", bad_amount:"Enter a valid amount." };
+    return map[code]||code;
+  }
+
+  return (
+    <div>
+      {/* HEADER */}
+      <div style={{padding:"14px 16px 4px"}} className="row between">
+        <div className="row gap">
+          <Avatar id={me.id} name={me.name} url={me.avatar_url} size={42}/>
+          <div>
+            <div className="sub">Signed in as</div>
+            <div className="h2">{me.name}{me.role==="admin" && <span className="pill admin" style={{marginLeft:6}}>CE Admin</span>}</div>
+          </div>
+        </div>
+        <div className="card" style={{padding:"8px 12px",textAlign:"right"}}>
+          <div className="lbl">CE Points</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#4ADE80"}}>{priv?priv.points:"—"}</div>
+        </div>
+      </div>
+
+      <div className="scroll">
+        {tab==="feed" && <Feed feed={feed} me={me} openProfile={setOpenId}/>}
+        {tab==="net" && <Network users={users} query={query} setQuery={q=>{setQuery(q);loadUsers(q);}} openProfile={setOpenId}/>}
+        {tab==="apply" && <Activities activities={activities} onApply={async(a)=>{ await act(()=>sb.rpc("apply_to_activity",{activity:a.id}), `Applied to ${a.name}`); loadFeed(); }}/>}
+        {tab==="alerts" && <Alerts notifs={notifs} me={me} openProfile={setOpenId} reload={()=>{loadNotifs();loadFeed();loadUsers(query);}} flash={flash} markRead={async()=>{ await sb.from("notifications").update({read:true}).eq("recipient_id",uid).eq("read",false); loadNotifs(); }}/>}
+        {tab==="me" && <MeTab me={me} priv={priv} reload={loadMe} setPriv={setPriv} flash={flash}/>}
+      </div>
+
+      {/* TABBAR */}
+      <div className="tabbar">
+        {[["feed","🏠","Feed"],["net","🔍","Network"],["apply","⚡","Apply"],["alerts","🔔","Alerts"],["me","👤","Me"]].map(([k,ic,lb])=>(
+          <div key={k} className={"tab"+(tab===k?" on":"")} onClick={()=>{setTab(k); if(k==="alerts"){ setTimeout(async()=>{ await sb.from("notifications").update({read:true}).eq("recipient_id",uid).eq("read",false); loadNotifs(); },400);} }} style={{position:"relative"}}>
+            <span className="ic">{ic}</span>{lb}
+            {k==="alerts" && unread>0 && <span className="dot-red"></span>}
+          </div>
+        ))}
+      </div>
+
+      {openId && <ProfileModal targetId={openId} me={me} onClose={()=>setOpenId(null)} flash={flash}
+        reload={()=>{loadFeed();loadUsers(query);loadMe();loadNotifs();}}/>}
+      {toast && <div className="toast">{toast}</div>}
+    </div>
+  );
+}
+
+// ---------- FEED ----------
+function feedText(e){
+  const actor = e.actor?.role==="admin" ? "CE Admin" : (e.actor?.name || "Someone");
+  const target = e.target?.name || "a member";
+  const p = e.payload||{};
+  switch(e.type){
+    case "apply": return `${actor} applied to ${p.activity||"an activity"} ${p.emoji||""}`;
+    case "transfer": return `${actor} sent ${target} ${p.amount} CE Points`;
+    case "connect": return `${actor} CE-connected with ${target}`;
+    case "badge": return `CE Admin awarded the ${BADGES[p.badge]?.n||p.badge} badge to ${target}`;
+    case "achievement": return `${target} earned: ${p.text}`;
+    default: return `${actor} took an action`;
+  }
+}
+function timeAgo(ts){
+  const s=Math.floor((Date.now()-new Date(ts))/1000);
+  if(s<60)return "just now"; if(s<3600)return Math.floor(s/60)+"m ago";
+  if(s<86400)return Math.floor(s/3600)+"h ago"; return Math.floor(s/86400)+"d ago";
+}
+function Feed({ feed, me, openProfile }) {
+  if(!feed.length) return <div className="empty">Your network is quiet.<br/>Connect with members and their actions show up here.</div>;
+  return (
+    <div>
+      <div className="sechead"><div className="h2">Network Activity</div><div className="lbl">Live</div></div>
+      {feed.map(e=>{
+        const broad = e.visibility==="broadcast";
+        return (
+          <div key={e.id} className="card fi" onClick={()=>e.actor && e.actor.id!==me.id && openProfile(e.actor.id)}>
+            <Avatar id={e.actor?.id} name={e.actor?.role==="admin"?"CE":e.actor?.name} url={e.actor?.avatar_url} size={36}/>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:12.5,lineHeight:1.4,fontWeight:500}}>{feedText(e)}</div>
+              <div className="row between" style={{marginTop:4}}>
+                <span className="sub" style={{fontSize:10}}>{timeAgo(e.created_at)}</span>
+                {broad && <span className="pill net">Network</span>}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------- NETWORK / SEARCH ----------
+function Network({ users, query, setQuery, openProfile }) {
+  return (
+    <div>
+      <div className="sechead"><div className="h2">Find Members</div></div>
+      <input className="input" style={{marginTop:0}} placeholder="Search name or university…" value={query} onChange={e=>setQuery(e.target.value)}/>
+      <div style={{marginTop:12}}>
+        {!users.length && <div className="empty">No members found.</div>}
+        {users.map(u=>(
+          <div key={u.id} className="card fi" onClick={()=>openProfile(u.id)}>
+            <Avatar id={u.id} name={u.name} url={u.avatar_url} size={40}/>
+            <div style={{flex:1,minWidth:0}}>
+              <div className="row between">
+                <div className="h2" style={{fontSize:14}}>{u.name}</div>
+                {u.role==="admin" && <span className="pill admin">CE Admin</span>}
+              </div>
+              <div className="sub">{u.university||"—"}</div>
+            </div>
+            <span style={{fontSize:9,fontWeight:800,color:u.available_to_connect?"#4ADE80":"rgba(255,255,255,0.4)"}}>
+              {u.available_to_connect?"● OPEN":"○ AWAY"}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------- ACTIVITIES ----------
+function Activities({ activities, onApply }) {
+  return (
+    <div>
+      <div className="sechead"><div className="h2">Network Activities</div><div className="lbl">Apply anytime</div></div>
+      {activities.map(a=>(
+        <div key={a.id} className="card row between" style={{marginBottom:8}}>
+          <div className="row gap">
+            <div className="avatar" style={{width:44,height:44,fontSize:22,background:`linear-gradient(135deg,${gradFor(a.id)})`}}>{a.emoji}</div>
+            <div className="h2" style={{fontSize:14}}>{a.name}</div>
+          </div>
+          <button className="btn sm" onClick={()=>onApply(a)}>Apply</button>
+        </div>
+      ))}
+      <div className="sub" style={{textAlign:"center",marginTop:14}}>Each application posts to your network feed.</div>
+    </div>
+  );
+}
+
+// ---------- ALERTS ----------
+function Alerts({ notifs, me, openProfile, reload, flash }) {
+  if(!notifs.length) return <div className="empty">No notifications yet.</div>;
+  return (
+    <div>
+      <div className="sechead"><div className="h2">Notifications</div></div>
+      {notifs.map(n=><AlertItem key={n.id} n={n} me={me} openProfile={openProfile} reload={reload} flash={flash}/>)}
+    </div>
+  );
+}
+function AlertItem({ n, me, openProfile, reload, flash }) {
+  const [choosing, setChoosing] = useState(false);
+  const [ig, setIg] = useState(false);
+  const [wa, setWa] = useState(false);
+  const a = n.actor;
+  const isReq = n.type==="connect_request";
+  const typeLabel = n.conn_type==="ce" ? "CE Connect" : "Private Connect";
+
+  async function findConn(){
+    const { data } = await sb.from("connections").select("*")
+      .eq("conn_type",n.conn_type).eq("status","pending")
+      .eq("requester_id",a.id).eq("addressee_id",me.id).order("updated_at",{ascending:false}).limit(1).maybeSingle();
+    return data;
+  }
+  async function respond(action){
+    const c = await findConn();
+    if(!c){ flash("This request is no longer active."); reload(); return; }
+    const { data } = await sb.rpc("respond_to_request",{ conn_id:c.id, action, share_ig:ig, share_wa:wa });
+    if(data&&data.error){ flash(data.error); return; }
+    flash(action==="accept"?"Connected":action==="ignore"?"Ignored":"Blocked");
+    reload();
+  }
+
+  let text;
+  if(isReq) text = `${a?.name} wants to ${typeLabel} — view their profile`;
+  else if(n.type==="connect_accepted") text = `${a?.name} accepted your ${typeLabel}`;
+  else if(n.type==="points") text = `${a?.name} sent you ${n.data?.amount} CE Points`;
+  else if(n.type==="announcement") text = n.data?.badge ? `You were awarded the ${BADGES[n.data.badge]?.n||n.data.badge} badge` : `Achievement: ${n.data?.text}`;
+  else text = "Notification";
+
+  return (
+    <div className="card" style={{marginBottom:8,opacity:n.read?0.75:1}}>
+      <div className="fi" style={{padding:0,cursor:isReq?"pointer":"default"}} onClick={()=>isReq&&a&&openProfile(a.id)}>
+        <Avatar id={a?.id} name={a?.role==="admin"?"CE":a?.name} url={a?.avatar_url} size={36}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:12.5,fontWeight:500,lineHeight:1.4}}>{text}</div>
+          <div className="sub" style={{fontSize:10,marginTop:3}}>{timeAgo(n.created_at)}</div>
+        </div>
+      </div>
+      {isReq && (
+        <div style={{marginTop:10}}>
+          {n.conn_type==="private" && choosing && (
+            <div className="card" style={{marginBottom:10,padding:12}}>
+              <div className="lbl" style={{marginBottom:8}}>Reveal to them</div>
+              <div className="row between" style={{marginBottom:8}}><span className="sub">Instagram</span><div className={"toggle"+(ig?" on":"")} onClick={()=>setIg(!ig)}></div></div>
+              <div className="row between"><span className="sub">WhatsApp</span><div className={"toggle"+(wa?" on":"")} onClick={()=>setWa(!wa)}></div></div>
+            </div>
+          )}
+          <div className="row gap">
+            {n.conn_type==="private" && !choosing
+              ? <button className="btn green sm" style={{flex:1}} onClick={()=>setChoosing(true)}>Accept…</button>
+              : <button className="btn green sm" style={{flex:1}} onClick={()=>respond("accept")}>Accept</button>}
+            <button className="btn ghost sm" style={{flex:1}} onClick={()=>respond("ignore")}>Ignore</button>
+            <button className="btn ghost sm" style={{flex:1,color:"#FF7DA8"}} onClick={()=>respond("block")}>Block</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- ME / PREFERENCES ----------
+function MeTab({ me, priv, reload, setPriv, flash }) {
+  const [ig, setIg] = useState(priv?.ig_handle||"");
+  const [wa, setWa] = useState(priv?.wa_number||"");
+  const [avail, setAvail] = useState(me.available_to_connect);
+  useEffect(()=>{ setIg(priv?.ig_handle||""); setWa(priv?.wa_number||""); },[priv]);
+
+  async function saveContacts(){
+    const { error } = await sb.from("user_private").update({ ig_handle:ig, wa_number:wa }).eq("user_id",me.id);
+    if(error){ flash(error.message); return; }
+    setPriv({...priv, ig_handle:ig, wa_number:wa}); flash("Contact info saved");
+  }
+  async function toggleAvail(){
+    const v=!avail; setAvail(v);
+    const { error } = await sb.from("profiles").update({ available_to_connect:v }).eq("id",me.id);
+    if(error){ flash(error.message); setAvail(!v); return; }
+    reload(); flash(v?"You're open to connect":"You're set to away");
+  }
+
+  return (
+    <div>
+      <div className="card" style={{textAlign:"center"}}>
+        <Avatar id={me.id} name={me.name} size={64} radius={20}/>
+        <div className="h1" style={{marginTop:10}}>{me.name}</div>
+        <div className="sub">{me.university||"—"} · {priv?.points} CE Points</div>
+        <BadgeRow badges={me.badges}/>
+      </div>
+
+      <div className="sechead"><div className="h2">Availability</div></div>
+      <div className="card row between">
+        <div><div className="h2" style={{fontSize:13}}>Open to connect</div><div className="sub">When off, no one can send you connect requests. Badges stay visible.</div></div>
+        <div className={"toggle"+(avail?" on":"")} onClick={toggleAvail}></div>
+      </div>
+
+      <div className="sechead"><div className="h2">Private Contacts</div></div>
+      <div className="card">
+        <div className="sub" style={{marginBottom:6}}>Only revealed to people you approve on a Private Connect.</div>
+        <input className="input" placeholder="Instagram @handle" value={ig} onChange={e=>setIg(e.target.value)}/>
+        <input className="input" placeholder="WhatsApp number" value={wa} onChange={e=>setWa(e.target.value)}/>
+        <button className="btn" style={{marginTop:12}} onClick={saveContacts}>Save changes</button>
+      </div>
+
+      <button className="btn ghost" style={{marginTop:20}} onClick={()=>sb.auth.signOut()}>Log out</button>
+    </div>
+  );
+}
+
+// ---------- PROFILE MODAL ----------
+function ProfileModal({ targetId, me, onClose, flash, reload }) {
+  const [p, setP] = useState(null);
+  const [connPriv, setConnPriv] = useState(null);
+  const [amount, setAmount] = useState("");
+  const [award, setAward] = useState("varsity");
+  const [ach, setAch] = useState("");
+
+  const load = useCallback(async ()=>{
+    const { data } = await sb.rpc("get_profile",{ target:targetId });
+    setP(data);
+    const { data:c } = await sb.from("connections").select("*").eq("conn_type","private")
+      .or(`and(requester_id.eq.${me.id},addressee_id.eq.${targetId}),and(requester_id.eq.${targetId},addressee_id.eq.${me.id})`)
+      .order("updated_at",{ascending:false}).limit(1).maybeSingle();
+    setConnPriv(c);
+  },[targetId,me.id]);
+  useEffect(()=>{ load(); },[load]);
+
+  if(!p) return <div className="overlay" onClick={onClose}><div className="sheet"><div className="grab"></div><div className="empty">Loading…</div></div></div>;
+  if(p.blocked) return <div className="overlay" onClick={onClose}><div className="sheet"><div className="grab"></div><div className="empty">This profile is unavailable.</div></div></div>;
+
+  async function req(ctype){
+    const { data } = await sb.rpc("send_connection_request",{ target:targetId, ctype });
+    if(data&&data.error){ flash({unavailable:"Not accepting requests right now.",already_pending:"Already pending.",already_connected:"Already connected.",ignored:"Ignored recently — try again in 2 days."}[data.error]||data.error); return; }
+    flash("Request sent"); load(); reload();
+  }
+  async function sendPoints(){
+    const amt = parseInt(amount,10);
+    const { data } = await sb.rpc("transfer_points",{ target:targetId, amount:amt });
+    if(data&&data.error){ flash({not_ce_connected:"CE Connect required.",insufficient:"Not enough points.",bad_amount:"Enter a valid amount."}[data.error]||data.error); return; }
+    flash(`Sent ${amt} CE Points`); setAmount(""); load(); reload();
+  }
+  async function saveShares(field,val){
+    if(!connPriv) return;
+    const iAmReq = connPriv.requester_id===me.id;
+    const curIg = iAmReq?connPriv.requester_share_ig:connPriv.addressee_share_ig;
+    const curWa = iAmReq?connPriv.requester_share_wa:connPriv.addressee_share_wa;
+    const nextIg = field==="ig"?val:curIg, nextWa = field==="wa"?val:curWa;
+    const { data } = await sb.rpc("update_my_shares",{ conn_id:connPriv.id, share_ig:nextIg, share_wa:nextWa });
+    if(data&&data.error){ flash(data.error); return; }
+    load(); flash("Connection updated");
+  }
+  async function awardBadge(){ const {data}=await sb.rpc("admin_award_badge",{target:targetId,badge_key:award}); if(data&&data.error){flash(data.error);return;} flash("Badge awarded"); load(); reload(); }
+  async function assignAch(){ if(!ach.trim())return; const {data}=await sb.rpc("admin_assign_achievement",{target:targetId,text_body:ach.trim()}); if(data&&data.error){flash(data.error);return;} flash("Achievement announced"); setAch(""); reload(); }
+
+  const ce = p.ce_status, pv = p.private_status;
+  const iAmReq = connPriv?.requester_id===me.id;
+  const myIg = connPriv ? (iAmReq?connPriv.requester_share_ig:connPriv.addressee_share_ig) : false;
+  const myWa = connPriv ? (iAmReq?connPriv.requester_share_wa:connPriv.addressee_share_wa) : false;
+
+  function ceBtn(){
+    if(ce==="accepted") return <button className="btn green sm" style={{flex:1}} disabled>✓ CE Connected</button>;
+    if(ce==="pending") return <button className="btn ghost sm" style={{flex:1}} disabled>CE Pending</button>;
+    if(!p.available_to_connect) return <button className="btn ghost sm" style={{flex:1}} disabled>Not available</button>;
+    return <button className="btn sm" style={{flex:1}} onClick={()=>req("ce")}>CE Connect</button>;
+  }
+  function pvBtn(){
+    if(pv==="accepted") return <button className="btn green sm" style={{flex:1}} disabled>✓ Private</button>;
+    if(pv==="pending") return <button className="btn ghost sm" style={{flex:1}} disabled>Private Pending</button>;
+    if(!p.available_to_connect) return <button className="btn ghost sm" style={{flex:1}} disabled>Not available</button>;
+    return <button className="btn pink sm" style={{flex:1}} onClick={()=>req("private")}>Private Connect</button>;
+  }
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="sheet" onClick={e=>e.stopPropagation()}>
+        <div className="grab"></div>
+        <div style={{textAlign:"center"}}>
+          <Avatar id={p.id} name={p.name} url={p.avatar_url} size={72} radius={22}/>
+          <div className="h1" style={{marginTop:10}}>{p.name}{p.role==="admin"&&<span className="pill admin" style={{marginLeft:6}}>CE Admin</span>}</div>
+          <div className="sub">{p.university}{p.major?` · ${p.major}`:""}</div>
+        </div>
+
+        <div className="row gap" style={{marginTop:16}}>{ceBtn()}{pvBtn()}</div>
+
+        {/* Transfer (CE connected) */}
+        {ce==="accepted" && (
+          <div className="card" style={{marginTop:12}}>
+            <div className="lbl" style={{marginBottom:6}}>Send CE Points</div>
+            <div className="row gap">
+              <input className="input" style={{marginTop:0}} type="number" placeholder="Amount" value={amount} onChange={e=>setAmount(e.target.value)}/>
+              <button className="btn sm" onClick={sendPoints}>Send</button>
+            </div>
+          </div>
+        )}
+
+        {/* Contacts revealed (Private connected) */}
+        {pv==="accepted" && (p.ig_handle||p.wa_number) && (
+          <div className="card" style={{marginTop:12}}>
+            <div className="lbl" style={{marginBottom:6}}>Contact</div>
+            {p.ig_handle && <div className="sub" style={{marginBottom:4}}>📸 Instagram: <b style={{color:"#F8FAFF"}}>{p.ig_handle}</b></div>}
+            {p.wa_number && <div className="sub">💬 WhatsApp: <b style={{color:"#F8FAFF"}}>{p.wa_number}</b></div>}
+          </div>
+        )}
+
+        {/* Edit Connection — my own private shares (always mine) */}
+        {pv==="accepted" && (
+          <div className="card" style={{marginTop:12}}>
+            <div className="lbl" style={{marginBottom:8}}>Edit Connection · what you reveal</div>
+            <div className="row between" style={{marginBottom:8}}><span className="sub">Show my Instagram</span><div className={"toggle"+(myIg?" on":"")} onClick={()=>saveShares("ig",!myIg)}></div></div>
+            <div className="row between"><span className="sub">Show my WhatsApp</span><div className={"toggle"+(myWa?" on":"")} onClick={()=>saveShares("wa",!myWa)}></div></div>
+          </div>
+        )}
+
+        {/* Badges */}
+        <div className="sechead" style={{marginBottom:6}}><div className="h2" style={{fontSize:14}}>Badges</div></div>
+        <BadgeRow badges={p.badges}/>
+
+        {/* Admin controls */}
+        {me.role==="admin" && (
+          <div className="card" style={{marginTop:16,border:"1px solid rgba(255,181,71,0.3)"}}>
+            <div className="lbl" style={{color:"#FFB547",marginBottom:8}}>CE Admin controls</div>
+            <div className="row gap" style={{marginBottom:10}}>
+              <select className="input" style={{marginTop:0}} value={award} onChange={e=>setAward(e.target.value)}>
+                {Object.keys(BADGES).map(k=><option key={k} value={k}>{BADGES[k].i} {BADGES[k].n}</option>)}
+              </select>
+              <button className="btn sm" onClick={awardBadge}>Award</button>
+            </div>
+            <div className="row gap">
+              <input className="input" style={{marginTop:0}} placeholder="Achievement text…" value={ach} onChange={e=>setAch(e.target.value)}/>
+              <button className="btn sm green" onClick={assignAch}>Announce</button>
+            </div>
+          </div>
+        )}
+
+        <button className="btn ghost" style={{marginTop:18}} onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
