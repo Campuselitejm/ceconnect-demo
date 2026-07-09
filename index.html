@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Campus Elite — Network Demo</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Campus Elite</title>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
-  html, body { height: 100%; }
+  html, body { width: 100%; height: 100%; }
   body {
     background:
       radial-gradient(ellipse 80% 40% at 50% 0%, rgba(139,92,246,0.3), transparent 70%),
@@ -19,80 +20,232 @@
     color: #F8FAFF;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display","SF Pro Text","Segoe UI", system-ui, sans-serif;
   }
-  #root { max-width: 460px; margin: 0 auto; min-height: 100vh; position: relative; }
-  .scroll { padding: 12px 16px 96px; }
-  .row { display: flex; align-items: center; }
-  .between { justify-content: space-between; }
-  .gap { gap: 10px; }
-  .muted { color: rgba(255,255,255,0.6); }
-  .card {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 16px;
-    padding: 14px;
-  }
-  .lbl { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
-  .h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
-  .h2 { font-size: 16px; font-weight: 700; }
-  .sub { font-size: 12px; color: rgba(255,255,255,0.62); }
-  .avatar {
-    border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    font-weight: 700; color: white; overflow: hidden; position: relative;
-  }
-  .btn {
-    border: none; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 700;
-    color: white; cursor: pointer; width: 100%;
-    background: linear-gradient(135deg, #8B5CF6, #2D3FE7);
-    box-shadow: 0 6px 16px rgba(139,92,246,0.3);
-  }
-  .btn.ghost { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); box-shadow: none; }
-  .btn.green { background: linear-gradient(135deg, #4ADE80, #22C55E); box-shadow: none; color: #06210F; }
-  .btn.pink { background: linear-gradient(135deg, #FF3D8A, #8B5CF6); box-shadow: none; }
-  .btn.sm { padding: 8px 12px; font-size: 12px; width: auto; }
-  .btn:disabled { opacity: 0.5; }
-  .input {
-    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 11px; padding: 12px 14px; color: white; font-size: 14px; outline: none; margin-top: 8px;
-  }
-  .input::placeholder { color: rgba(255,255,255,0.4); }
-  .badge-chip {
-    display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 100px;
-    font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.14);
-  }
-  .pill { padding: 4px 9px; border-radius: 100px; font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
-  .pill.net { background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); color: #C4B5FD; }
-  .pill.admin { background: rgba(255,181,71,0.15); border: 1px solid rgba(255,181,71,0.4); color: #FFB547; }
-  .tabbar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 460px; display: flex; justify-content: space-around;
-    background: rgba(8,10,30,0.92); backdrop-filter: blur(14px);
-    border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-  }
-  .tab { flex: 1; text-align: center; padding: 6px 2px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.45); cursor: pointer; }
-  .tab.on { color: #C4B5FD; }
-  .tab .ic { font-size: 18px; display: block; margin-bottom: 2px; }
-  .tab .nd { position: absolute; }
-  .fi { display: flex; gap: 11px; padding: 11px 13px; margin-bottom: 8px; }
-  .toggle { width: 44px; height: 26px; border-radius: 100px; background: rgba(255,255,255,0.15); position: relative; flex-shrink: 0; cursor: pointer; transition: .15s; }
-  .toggle.on { background: linear-gradient(135deg, #8B5CF6, #2D3FE7); }
-  .toggle::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:white; transition:.15s; }
-  .toggle.on::after { left: 21px; }
-  .overlay { position: fixed; inset: 0; background: rgba(4,5,18,0.7); backdrop-filter: blur(4px); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
-  .sheet {
-    width: 100%; max-width: 460px; background: linear-gradient(180deg,#14183F,#0B0E2C);
-    border-radius: 24px 24px 0 0; border-top: 1px solid rgba(255,255,255,0.14);
-    max-height: 88vh; overflow-y: auto; padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
-  }
-  .grab { width: 40px; height: 4px; border-radius: 100px; background: rgba(255,255,255,0.25); margin: 0 auto 14px; }
-  .toast {
-    position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%); z-index: 100;
-    background: rgba(8,10,30,0.96); border: 1px solid rgba(255,255,255,0.16); color: white;
-    padding: 11px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; max-width: 90%;
-  }
-  .sechead { display: flex; justify-content: space-between; align-items: center; margin: 20px 2px 10px; }
-  .empty { text-align: center; color: rgba(255,255,255,0.45); font-size: 13px; padding: 30px 10px; }
-  .dot-red { width: 8px; height: 8px; border-radius: 50%; background: #FF3D8A; position: absolute; top: 4px; right: 22px; }
-  a { color: #C4B5FD; }
+  #root { max-width: 460px; margin: 0 auto; position: relative; min-height: 100vh; }
+  .content { padding: 12px 18px 120px; }
+
+  .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 18px; }
+  .greeting { display: flex; align-items: center; gap: 11px; }
+  .avatar { width: 42px; height: 42px; border-radius: 13px; background: linear-gradient(135deg,#8B5CF6,#2D3FE7); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: white; position: relative; overflow: hidden; }
+  .avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .avatar.on::after { content: ''; position: absolute; bottom: -2px; right: -2px; width: 11px; height: 11px; border-radius: 50%; background: #4ADE80; border: 2px solid #0B0E2C; }
+  .hi { font-size: 11px; color: rgba(255,255,255,0.62); font-weight: 500; }
+  .name { font-size: 16px; font-weight: 700; }
+  .top-actions { display: flex; gap: 7px; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; color: white; }
+  .icon-btn .dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; background: #FF3D8A; border-radius: 50%; border: 2px solid #14183F; }
+
+  .page-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 16px; }
+  .back-btn { width: 38px; height: 38px; border-radius: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; }
+  .page-title { font-size: 16px; font-weight: 700; }
+  .page-spacer { width: 38px; }
+
+  .hero { border-radius: 24px; padding: 22px; background: linear-gradient(135deg,#8B5CF6,#2D3FE7); box-shadow: 0 16px 32px rgba(45,63,231,0.3); position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 200px; height: 200px; background: rgba(255,255,255,0.15); border-radius: 50%; filter: blur(40px); }
+  .hero-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; position: relative; }
+  .hero-label { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.85); }
+  .pulse { width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 6px #4ADE80; }
+  .tier { display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.25); padding: 4px 10px 4px 8px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.12); font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .tier-dot { width: 5px; height: 5px; border-radius: 50%; background: linear-gradient(135deg,#FFB547,#FF3D8A); }
+  .points { font-size: 46px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; position: relative; }
+  .currency { font-size: 12px; font-weight: 600; opacity: 0.7; letter-spacing: 0.04em; text-transform: uppercase; margin-left: 6px; }
+  .delta { margin-top: 6px; text-align: right; font-size: 11px; font-weight: 700; color: #EAFBF0; position: relative; }
+  .divider { height: 1px; background: rgba(255,255,255,0.15); margin: 16px 0; position: relative; }
+  .hero-bottom { display: flex; justify-content: space-between; align-items: center; position: relative; }
+  .ce-id { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; }
+  .lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 3px; }
+  .xp-wrap { text-align: right; }
+  .xp-bar { width: 80px; height: 5px; background: rgba(0,0,0,0.3); border-radius: 100px; overflow: hidden; }
+  .xp-fill { height: 100%; width: 12%; background: linear-gradient(90deg,#FFB547,#FF3D8A); border-radius: 100px; }
+
+  .qa-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .qa { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 13px 6px 11px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+  .qa-ic { width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .qa-ic.r { background: linear-gradient(135deg,#4ADE80,#22C55E); }
+  .qa-ic.s { background: linear-gradient(135deg,#FFB547,#FF8A47); }
+  .qa-ic.g { background: linear-gradient(135deg,#8B5CF6,#6366F1); }
+  .qa-l { font-size: 10.5px; font-weight: 700; }
+
+  .sh { display: flex; justify-content: space-between; align-items: center; margin: 22px 0 11px; }
+  .sh-t { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .lv { background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.3); color: #4ADE80; padding: 2px 7px; border-radius: 100px; font-size: 8px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; display: flex; align-items: center; gap: 4px; }
+  .lv-d { width: 4px; height: 4px; border-radius: 50%; background: #4ADE80; }
+  .sh-l { font-size: 11px; font-weight: 600; color: #C4B5FD; cursor: pointer; }
+
+  .feed { display: flex; flex-direction: column; gap: 7px; }
+  .fi { display: flex; align-items: center; gap: 11px; padding: 11px 13px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 15px; cursor: pointer; }
+  .fa { width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: white; position: relative; overflow: hidden; }
+  .fa img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .fa-ic { position: absolute; bottom: -3px; right: -3px; z-index: 2; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #0B0E2C; display: flex; align-items: center; justify-content: center; }
+  .fa-ic.gain { background: #4ADE80; } .fa-ic.spin { background: #FFB547; } .fa-ic.rd { background: #FF3D8A; } .fa-ic.trophy { background: linear-gradient(135deg,#FFB547,#FF3D8A); }
+  .fb { flex: 1; min-width: 0; }
+  .ft { font-size: 12px; line-height: 1.4; font-weight: 500; }
+  .ft .nm { font-weight: 700; } .ft .un { color: rgba(255,255,255,0.62); font-size: 10.5px; }
+  .ft .pt { color: #4ADE80; font-weight: 800; } .ft .pz { color: #FFB547; font-weight: 700; } .ft .tr { color: #FFB547; font-weight: 700; }
+  .ft-tm { font-size: 9.5px; color: rgba(255,255,255,0.38); margin-top: 2px; }
+
+  .feat { border-radius: 22px; padding: 18px; background: linear-gradient(135deg,#1E40AF,#C2410C); height: 170px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; }
+  .feat::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.6) 100%); }
+  .feat-ic { position: absolute; top: 16px; left: 16px; width: 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+  .feat-tag { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.95); color: #0A0E27; padding: 4px 9px; border-radius: 100px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; display: flex; align-items: center; gap: 4px; }
+  .feat-dot { width: 5px; height: 5px; border-radius: 50%; background: #FF3D8A; }
+  .feat-body { position: relative; }
+  .feat-eb { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; margin-bottom: 5px; }
+  .feat-tt { font-size: 20px; font-weight: 800; line-height: 1.1; margin-bottom: 9px; }
+  .feat-mt { display: flex; align-items: center; gap: 9px; font-size: 10px; opacity: 0.85; }
+  .feat-rw { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.25); padding: 3px 9px; border-radius: 100px; font-weight: 700; font-size: 9.5px; }
+
+  .rb { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25); border-radius: 18px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .rb-l { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.62); margin-bottom: 3px; }
+  .rb-v { font-size: 24px; font-weight: 800; color: #4ADE80; }
+  .rb-i { width: 42px; height: 42px; border-radius: 13px; background: linear-gradient(135deg,#4ADE80,#22C55E); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .pills { display: flex; gap: 7px; margin-bottom: 12px; overflow-x: auto; }
+  .pl { padding: 6px 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 100px; font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,0.62); white-space: nowrap; cursor: pointer; flex-shrink: 0; }
+  .pl.act { background: linear-gradient(135deg,#8B5CF6,#2D3FE7); border-color: transparent; color: white; }
+  .rg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rc { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; overflow: hidden; }
+  .ri { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 36px; position: relative; }
+  .ri.r1 { background: linear-gradient(135deg,#FFB547,#FF3D8A); } .ri.r2 { background: linear-gradient(135deg,#4ADE80,#06B6D4); } .ri.r3 { background: linear-gradient(135deg,#8B5CF6,#2D3FE7); } .ri.r4 { background: linear-gradient(135deg,#FF3D8A,#8B5CF6); }
+  .rs { position: absolute; top: 7px; right: 7px; background: rgba(0,0,0,0.5); color: white; font-size: 8.5px; font-weight: 700; padding: 3px 7px; border-radius: 100px; text-transform: uppercase; }
+  .rin { padding: 9px 11px 12px; }
+  .rb-br { font-size: 8.5px; font-weight: 800; color: rgba(255,255,255,0.62); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+  .rn { font-size: 11.5px; font-weight: 700; line-height: 1.2; margin-bottom: 7px; }
+  .rco { font-size: 11.5px; font-weight: 800; color: #4ADE80; }
+  .scn { border-radius: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); aspect-ratio: 1; margin: 12px 0 16px; position: relative; overflow: hidden; }
+  .scn-fr { position: absolute; top: 18%; left: 18%; right: 18%; bottom: 18%; }
+  .scn-c { position: absolute; width: 26px; height: 26px; border: 3px solid #4ADE80; }
+  .scn-c.tl { top:0; left:0; border-right:none; border-bottom:none; border-top-left-radius:14px; }
+  .scn-c.tr { top:0; right:0; border-left:none; border-bottom:none; border-top-right-radius:14px; }
+  .scn-c.bl { bottom:0; left:0; border-right:none; border-top:none; border-bottom-left-radius:14px; }
+  .scn-c.br { bottom:0; right:0; border-left:none; border-top:none; border-bottom-right-radius:14px; }
+  .scn-h { text-align: center; color: rgba(255,255,255,0.62); font-size: 11.5px; line-height: 1.5; padding: 0 8px; }
+  .scn-h strong { color: white; font-weight: 700; }
+  .gh { border-radius: 20px; padding: 20px; background: linear-gradient(135deg,#8B5CF6,#FF3D8A); margin-bottom: 12px; }
+  .gh-eb { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.9; margin-bottom: 5px; }
+  .gh-tt { font-size: 20px; font-weight: 800; line-height: 1.1; margin-bottom: 9px; max-width: 70%; }
+  .gh-mt { display: flex; gap: 5px; flex-wrap: wrap; }
+  .gc { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.15); padding: 3px 9px; border-radius: 100px; font-size: 9.5px; font-weight: 700; }
+  .gl { display: flex; flex-direction: column; gap: 9px; }
+  .gi { display: flex; gap: 11px; padding: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 15px; align-items: center; }
+  .gt { width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .gt.t1 { background: linear-gradient(135deg,#4ADE80,#22C55E); } .gt.t2 { background: linear-gradient(135deg,#FFB547,#FF8A47); } .gt.t3 { background: linear-gradient(135deg,#06B6D4,#2D3FE7); }
+  .gb { flex: 1; min-width: 0; }
+  .gn { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+  .gm { font-size: 9.5px; color: rgba(255,255,255,0.62); margin-bottom: 5px; }
+  .gp { height: 4px; background: rgba(255,255,255,0.1); border-radius: 100px; overflow: hidden; }
+  .gpf { height: 100%; background: linear-gradient(90deg,#8B5CF6,#FF3D8A); border-radius: 100px; }
+  .gen { background: linear-gradient(135deg,#8B5CF6,#2D3FE7); color: white; padding: 6px 12px; border-radius: 100px; font-size: 9.5px; font-weight: 800; flex-shrink: 0; text-transform: uppercase; }
+
+  .al { display: flex; flex-direction: column; gap: 9px; }
+  .ai { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; }
+  .at-th { width: 42px; height: 42px; border-radius: 13px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .ab { flex: 1; min-width: 0; }
+  .att { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+  .as { font-size: 10.5px; color: rgba(255,255,255,0.62); }
+
+  .ph { text-align: center; padding: 12px 0 20px; }
+  .pa { width: 78px; height: 78px; border-radius: 26px; background: linear-gradient(135deg,#8B5CF6,#2D3FE7); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 28px; color: white; margin: 0 auto 11px; border: 3px solid rgba(255,255,255,0.1); box-shadow: 0 8px 20px rgba(139,92,246,0.4); position: relative; overflow: hidden; }
+  .pa img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .pn { font-size: 19px; font-weight: 800; margin-bottom: 3px; }
+  .pun { font-size: 11.5px; color: rgba(255,255,255,0.62); margin-bottom: 11px; }
+  .pcid { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 100px; font-family: "SF Mono", Menlo, Consolas, monospace; font-weight: 700; font-size: 11px; letter-spacing: 0.06em; }
+  .pst { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 16px; }
+  .psi { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 11px 7px; text-align: center; }
+  .psv { font-size: 17px; font-weight: 800; }
+  .psl { font-size: 8.5px; color: rgba(255,255,255,0.62); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; margin-top: 3px; }
+  .szn-card { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(45,63,231,0.08)); border: 1px solid rgba(139,92,246,0.25); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
+  .szn-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .szn-tag { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.62); }
+  .szn-lock { display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; padding: 3px 8px 3px 6px; background: rgba(255,181,71,0.15); border: 1px solid rgba(255,181,71,0.3); color: #FFB547; border-radius: 100px; text-transform: uppercase; }
+  .szn-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .szn-stat { text-align: center; }
+  .szn-v { font-size: 17px; font-weight: 800; }
+  .szn-l { font-size: 8.5px; color: rgba(255,255,255,0.62); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+
+  .badge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .badge { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 8px 12px 8px 8px; position: relative; min-height: 52px; }
+  .badge:not(.earned) { opacity: 0.32; }
+  .badge-ic { width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .badge-ic.party { background: linear-gradient(135deg,#FF3D8A,#8B5CF6); }
+  .badge-ic.trip { background: linear-gradient(135deg,#06B6D4,#2D3FE7); }
+  .badge-ic.bcr { background: linear-gradient(135deg,#FFB547,#FF8A47); }
+  .badge-ic.cc { background: linear-gradient(135deg,#FF3D8A,#FFB547); }
+  .badge-ic.fc { background: linear-gradient(135deg,#4ADE80,#22C55E); }
+  .badge-ic.sc { background: linear-gradient(135deg,#8B5CF6,#2D3FE7); }
+  .badge-ic.varsity { background: linear-gradient(135deg,#FFB547,#FF3D8A); }
+  .badge-ic.varsity_sc { background: linear-gradient(135deg,#A855F7,#FF3D8A); }
+  .badge-n { font-size: 12px; font-weight: 700; line-height: 1.15; flex: 1; }
+  .badge-check { position: absolute; top: 6px; right: 6px; width: 14px; height: 14px; border-radius: 50%; background: #4ADE80; display: flex; align-items: center; justify-content: center; }
+  .conn-count { background: rgba(139,92,246,0.15); color: #C4B5FD; padding: 3px 8px; border-radius: 100px; font-size: 10px; font-weight: 800; margin-left: auto; }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; }
+  .modal-sheet { position: fixed; left: 0; right: 0; bottom: 0; max-width: 460px; margin: 0 auto; max-height: 92vh; background: radial-gradient(ellipse at 100% 0%, rgba(139,92,246,0.25), transparent 55%), radial-gradient(ellipse at 0% 100%, rgba(45,63,231,0.3), transparent 55%), linear-gradient(165deg,#0A0E27 0%,#14183F 20%,#1E1B4B 45%,#2E1065 75%,#4C1D95 100%); color: #F8FAFF; border-radius: 28px 28px 0 0; z-index: 101; overflow: hidden; display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.15); box-shadow: 0 -20px 50px rgba(0,0,0,0.6); }
+  .modal-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 100px; margin: 10px auto 4px; flex-shrink: 0; }
+  .modal-close { position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; color: white; }
+  .modal-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 20px 30px; padding-bottom: calc(30px + env(safe-area-inset-bottom)); }
+  .mp-hero { text-align: center; padding: 8px 0 16px; }
+  .mp-avatar { width: 88px; height: 88px; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 32px; color: white; margin: 0 auto 12px; border: 3px solid rgba(255,255,255,0.25); box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 40px rgba(139,92,246,0.35); position: relative; overflow: hidden; }
+  .mp-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .mp-name { font-size: 20px; font-weight: 800; margin-bottom: 3px; color: white; }
+  .mp-meta { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 14px; font-weight: 500; }
+  .mp-meta .dot { display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.4); margin: 0 6px; vertical-align: middle; }
+  .connect-cta { display: flex; gap: 8px; margin-bottom: 4px; }
+  .connect-btn { flex: 1; background: linear-gradient(135deg,#A855F7,#EC4899); border: none; border-radius: 13px; padding: 12px; color: white; font-size: 12.5px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 20px rgba(168,85,247,0.4); display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .connect-btn.ce { background: linear-gradient(135deg,#8B5CF6,#2D3FE7); box-shadow: 0 8px 20px rgba(139,92,246,0.4); }
+  .connect-btn.pending { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: none; color: rgba(255,255,255,0.7); }
+  .connect-btn.connected { background: rgba(74,222,128,0.18); border: 1px solid rgba(74,222,128,0.4); box-shadow: none; color: #4ADE80; }
+  .contact-chips { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 6px; }
+  .cc-chip { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 14px; font-size: 11px; font-weight: 600; }
+  .cc-chip.ig { border-left: 3px solid #EC4899; } .cc-chip.wa { border-left: 3px solid #25D366; }
+  .cc-ic { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+  .cc-chip.ig .cc-ic { background: linear-gradient(135deg,#F77737,#E1306C 40%,#C13584 70%,#833AB4); } .cc-chip.wa .cc-ic { background: #25D366; }
+  .cc-body { flex: 1; min-width: 0; }
+  .cc-l { font-size: 8.5px; color: rgba(255,255,255,0.6); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 800; }
+  .cc-h { font-size: 12.5px; font-weight: 700; margin-top: 2px; color: white; }
+  .m-sh { display: flex; justify-content: space-between; align-items: center; margin: 20px 0 10px; }
+  .m-sh-t { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 6px; }
+  .m-sh-c { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); }
+  .edit-conn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px; margin-top: 8px; }
+  .ec-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+  .ec-row + .ec-row { border-top: 1px solid rgba(255,255,255,0.08); margin-top: 2px; padding-top: 10px; }
+  .ec-lbl { font-size: 12.5px; font-weight: 700; color: white; }
+  .ec-sub { font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+  .toggle { width: 40px; height: 24px; background: rgba(255,255,255,0.15); border-radius: 100px; position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
+  .toggle.on { background: #4ADE80; }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+  .toggle.on::after { transform: translateX(16px); }
+  .mini-feed { display: flex; flex-direction: column; gap: 6px; }
+  .mf-item { display: flex; align-items: center; gap: 10px; padding: 9px 11px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+  .mf-dot { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; color: white; }
+  .mf-dot.gain { background: linear-gradient(135deg,#4ADE80,#22C55E); } .mf-dot.spin { background: linear-gradient(135deg,#FFB547,#FF8A47); } .mf-dot.rd { background: linear-gradient(135deg,#FF3D8A,#EC4899); } .mf-dot.trophy { background: linear-gradient(135deg,#FFB547,#FF3D8A); }
+  .mf-body { flex: 1; min-width: 0; }
+  .mf-t { font-size: 11.5px; font-weight: 600; line-height: 1.35; color: rgba(255,255,255,0.9); }
+  .mf-tm { font-size: 9.5px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+  .mf-empty { padding: 20px 12px; text-align: center; background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.12); border-radius: 12px; font-size: 11.5px; color: rgba(255,255,255,0.5); }
+  .locked-note { text-align: center; font-size: 11.5px; color: rgba(255,255,255,0.7); margin-top: 14px; padding: 12px; background: rgba(255,255,255,0.06); border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); }
+  .msend { display: flex; gap: 8px; margin-top: 8px; }
+  .m-input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 11px; padding: 11px 13px; color: white; font-size: 13px; outline: none; }
+  .m-btn { background: linear-gradient(135deg,#8B5CF6,#2D3FE7); border: none; border-radius: 11px; padding: 0 16px; color: white; font-size: 12px; font-weight: 800; cursor: pointer; }
+  .m-btn.green { background: linear-gradient(135deg,#4ADE80,#22C55E); color: #06210F; }
+  .admin-box { background: rgba(255,181,71,0.06); border: 1px solid rgba(255,181,71,0.3); border-radius: 14px; padding: 14px; margin-top: 16px; }
+  .m-select { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 11px; padding: 11px 13px; color: white; font-size: 13px; outline: none; }
+
+  .bn { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 460px; padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, transparent 0%, rgba(11,14,44,0.85) 30%, #0B0E2C 60%); z-index: 10; }
+  .nb { height: 58px; background: rgba(20,24,63,0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; display: grid; grid-template-columns: 1fr 1fr 58px 1fr 1fr; align-items: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .ni { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; color: rgba(255,255,255,0.62); font-size: 8.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; position: relative; }
+  .ni.act { color: white; }
+  .ni.act .ni-bg { background: linear-gradient(135deg,#8B5CF6,#2D3FE7); }
+  .ni-bg { width: 32px; height: 24px; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .ni .nd { position: absolute; top: -1px; right: 4px; width: 7px; height: 7px; background: #FF3D8A; border-radius: 50%; border: 2px solid #14183F; }
+  .ns { width: 54px; height: 54px; border-radius: 18px; background: linear-gradient(135deg,#8B5CF6,#2D3FE7); margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(139,92,246,0.5); cursor: pointer; transform: translateY(-12px); }
+
+  .auth-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); border-radius: 11px; padding: 12px 14px; color: white; font-size: 14px; outline: none; margin-top: 8px; }
+  .auth-input::placeholder { color: rgba(255,255,255,0.4); }
+  .auth-btn { width: 100%; background: linear-gradient(135deg,#8B5CF6,#2D3FE7); border: none; border-radius: 13px; padding: 13px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 14px; box-shadow: 0 6px 16px rgba(139,92,246,0.3); }
+  .card-plain { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px; }
+  .empty { text-align: center; color: rgba(255,255,255,0.45); font-size: 13px; padding: 34px 10px; line-height: 1.5; }
+  .toast { position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%); z-index: 200; background: rgba(8,10,30,0.96); border: 1px solid rgba(255,255,255,0.16); color: white; padding: 11px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; max-width: 90%; }
+  .avail-tag { font-size: 9px; font-weight: 800; }
+  ::-webkit-scrollbar { display: none; }
 </style>
 </head>
 <body>
@@ -105,285 +258,167 @@ const SUPABASE_KEY = "sb_publishable_9lzn1_aO25VvgESc0Gn1Rg_Cg-vEqgg";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const BADGES = {
-  party:      { i: "🎉", n: "Party PAS" },
-  trip:       { i: "✈️", n: "Trip PAS" },
-  bcr:        { i: "📣", n: "BCR" },
-  cc:         { i: "🎥", n: "Content Creator" },
-  fc:         { i: "🎓", n: "Freshman Class" },
-  sc:         { i: "⭐", n: "Student Coord." },
-  varsity:    { i: "🏆", n: "Varsity" },
-  varsity_sc: { i: "🎖️", n: "Varsity SC" },
+  party: { i:"🎉", n:"Party PAS" }, trip: { i:"✈️", n:"Trip PAS" }, bcr: { i:"📣", n:"BCR" },
+  cc: { i:"🎥", n:"Content Creator" }, fc: { i:"🎓", n:"Freshman Class" }, sc: { i:"⭐", n:"Student Coord." },
+  varsity: { i:"🏆", n:"Varsity" }, varsity_sc: { i:"🎖️", n:"Varsity SC" },
 };
-const GRADS = ["#8B5CF6,#2D3FE7","#FF3D8A,#8B5CF6","#4ADE80,#06B6D4","#FFB547,#FF8A47","#06B6D4,#2D3FE7"];
-function gradFor(id){ let s=0; for(const c of (id||"")) s+=c.charCodeAt(0); return GRADS[s%GRADS.length]; }
-function initials(name){ return (name||"?").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase(); }
+const GRADS = ["135deg,#8B5CF6,#2D3FE7","135deg,#FF3D8A,#FFB547","135deg,#4ADE80,#06B6D4","135deg,#8B5CF6,#FF3D8A","135deg,#06B6D4,#2D3FE7"];
+function gradFor(id){ let s=0; for(const c of (id||"x")) s+=c.charCodeAt(0); return GRADS[s%GRADS.length]; }
+function initials(n){ return (n||"?").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase(); }
+function ceid(id){ let h=0; for(const c of (id||"")) h=(h*31+c.charCodeAt(0))>>>0; return "CE"+String(h).padStart(7,"0").slice(0,7); }
+function timeAgo(ts){ const s=Math.floor((Date.now()-new Date(ts))/1000); if(s<60)return"Just now"; if(s<3600)return Math.floor(s/60)+"m ago"; if(s<86400)return Math.floor(s/3600)+"h ago"; return Math.floor(s/86400)+"d ago"; }
 
-function Avatar({ id, name, url, size=42, radius }) {
-  const r = radius || Math.round(size*0.3);
-  return (
-    <div className="avatar" style={{width:size,height:size,fontSize:size*0.36,borderRadius:r,background:`linear-gradient(135deg,${gradFor(id)})`}}>
-      {url ? <img src={url} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}}/> : initials(name)}
-    </div>
-  );
+function Avatar({ id, name, url, cls }) {
+  return <div className={cls} style={{background:`linear-gradient(${gradFor(id)})`}}>{url?<img src={url} alt=""/>:initials(name)}</div>;
 }
 
-function BadgeRow({ badges }) {
-  const keys = Object.keys(badges||{}).filter(k=>badges[k]);
-  if (!keys.length) return <div className="sub" style={{marginTop:6}}>No badges yet</div>;
-  return (
-    <div className="row gap" style={{flexWrap:"wrap",marginTop:8}}>
-      {keys.map(k => BADGES[k] && (
-        <span key={k} className="badge-chip">{BADGES[k].i} {BADGES[k].n}</span>
-      ))}
-    </div>
-  );
-}
-
-// ---------- AUTH ----------
 function Auth() {
-  const [mode, setMode] = useState("login");
-  const [f, setF] = useState({ name:"", email:"", password:"", university:"" });
-  const [err, setErr] = useState("");
-  const [busy, setBusy] = useState(false);
-  const upd = k => e => setF({ ...f, [k]: e.target.value });
-
-  async function go() {
+  const [mode,setMode]=useState("login");
+  const [f,setF]=useState({name:"",email:"",password:"",university:""});
+  const [err,setErr]=useState(""); const [busy,setBusy]=useState(false);
+  const u=k=>e=>setF({...f,[k]:e.target.value});
+  async function go(){
     setErr(""); setBusy(true);
-    try {
-      if (mode === "signup") {
-        if (!f.name || !f.email || !f.password) { setErr("Name, email and password are required."); setBusy(false); return; }
-        const { error } = await sb.auth.signUp({
-          email: f.email, password: f.password,
-          options: { data: { name: f.name, university: f.university } }
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await sb.auth.signInWithPassword({ email: f.email, password: f.password });
-        if (error) throw error;
+    try{
+      if(mode==="signup"){
+        if(!f.name||!f.email||!f.password){setErr("Name, email and password are required.");setBusy(false);return;}
+        const {error}=await sb.auth.signUp({email:f.email,password:f.password,options:{data:{name:f.name,university:f.university}}});
+        if(error)throw error;
+      }else{
+        const {error}=await sb.auth.signInWithPassword({email:f.email,password:f.password});
+        if(error)throw error;
       }
-    } catch (e) { setErr(e.message || "Something went wrong."); }
+    }catch(e){setErr(e.message||"Something went wrong.");}
     setBusy(false);
   }
-
   return (
-    <div className="scroll" style={{paddingTop:70}}>
-      <div style={{textAlign:"center",marginBottom:28}}>
-        <div className="avatar" style={{width:60,height:60,margin:"0 auto 14px",borderRadius:18,fontSize:24,background:"linear-gradient(135deg,#8B5CF6,#2D3FE7)"}}>CE</div>
-        <div className="h1">Campus Elite</div>
-        <div className="sub" style={{marginTop:4}}>Network Demo</div>
+    <div className="content" style={{paddingTop:70}}>
+      <div style={{textAlign:"center",marginBottom:26}}>
+        <div className="avatar" style={{width:60,height:60,margin:"0 auto 14px",borderRadius:18,fontSize:24}}>CE</div>
+        <div style={{fontSize:22,fontWeight:800}}>Campus Elite</div>
+        <div className="pun" style={{marginTop:4}}>Network</div>
       </div>
-      <div className="card">
-        <div className="row" style={{background:"rgba(0,0,0,0.3)",borderRadius:12,padding:4,marginBottom:14}}>
+      <div className="card-plain">
+        <div style={{display:"flex",background:"rgba(0,0,0,0.3)",borderRadius:12,padding:4,marginBottom:14}}>
           {["login","signup"].map(m=>(
-            <div key={m} onClick={()=>{setMode(m);setErr("")}} style={{flex:1,textAlign:"center",padding:"9px",borderRadius:9,fontSize:12,fontWeight:700,cursor:"pointer",
-              background: mode===m ? "linear-gradient(135deg,#8B5CF6,#2D3FE7)" : "transparent",
-              color: mode===m ? "white" : "rgba(255,255,255,0.6)"}}>
-              {m==="login"?"Log in":"Sign up"}
-            </div>
+            <div key={m} onClick={()=>{setMode(m);setErr("")}} style={{flex:1,textAlign:"center",padding:9,borderRadius:9,fontSize:12,fontWeight:700,cursor:"pointer",background:mode===m?"linear-gradient(135deg,#8B5CF6,#2D3FE7)":"transparent",color:mode===m?"white":"rgba(255,255,255,0.6)"}}>{m==="login"?"Log in":"Sign up"}</div>
           ))}
         </div>
-        {mode==="signup" && <input className="input" placeholder="Full name" value={f.name} onChange={upd("name")} />}
-        {mode==="signup" && <input className="input" placeholder="University" value={f.university} onChange={upd("university")} />}
-        <input className="input" placeholder="Email" type="email" autoCapitalize="none" value={f.email} onChange={upd("email")} />
-        <input className="input" placeholder="Password" type="password" value={f.password} onChange={upd("password")} />
-        {err && <div style={{color:"#FF7DA8",fontSize:12,marginTop:10}}>{err}</div>}
-        <button className="btn" style={{marginTop:14}} disabled={busy} onClick={go}>
-          {busy ? "Please wait…" : mode==="login" ? "Log in" : "Create account"}
-        </button>
+        {mode==="signup"&&<input className="auth-input" placeholder="Full name" value={f.name} onChange={u("name")}/>}
+        {mode==="signup"&&<input className="auth-input" placeholder="University" value={f.university} onChange={u("university")}/>}
+        <input className="auth-input" placeholder="Email" type="email" autoCapitalize="none" value={f.email} onChange={u("email")}/>
+        <input className="auth-input" placeholder="Password" type="password" value={f.password} onChange={u("password")}/>
+        {err&&<div style={{color:"#FF7DA8",fontSize:12,marginTop:10}}>{err}</div>}
+        <button className="auth-btn" disabled={busy} onClick={go}>{busy?"Please wait…":mode==="login"?"Log in":"Create account"}</button>
       </div>
-      <div className="sub" style={{textAlign:"center",marginTop:16,lineHeight:1.5}}>
-        Sign up appears in the network search once you're in.<br/>Everyone starts with 1,000 CE Points.
-      </div>
+      <div className="empty" style={{fontSize:11.5}}>You'll appear in the network once you're in.<br/>Everyone starts with 1,000 CE Points.</div>
     </div>
   );
 }
 
-// ---------- MAIN APP ----------
-function App() {
-  const [session, setSession] = useState(null);
-  const [me, setMe] = useState(null);
-  const [priv, setPriv] = useState(null);
-  const [tab, setTab] = useState("feed");
-  const [feed, setFeed] = useState([]);
-  const [notifs, setNotifs] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [query, setQuery] = useState("");
-  const [openId, setOpenId] = useState(null);
-  const [toast, setToast] = useState("");
-  const toastRef = useRef();
+const TYPE_ICON = { apply:"gain", transfer:"rd", connect:"gain", badge:"trophy", achievement:"trophy" };
+function feedInner(e){
+  const actorName = e.actor?.role==="admin" ? "CE Admin" : (e.actor?.name||"Someone");
+  const uni = e.actor?.role==="admin" ? "" : (e.actor?.university||"");
+  const target = e.target?.name||"a member";
+  const p=e.payload||{};
+  let body;
+  if(e.type==="apply") body=<span>applied to <b>{p.activity} {p.emoji||""}</b></span>;
+  else if(e.type==="transfer") body=<span>sent {target} <span className="pt">{p.amount} CEP</span></span>;
+  else if(e.type==="connect") body=<span>CE-connected with <b>{target}</b></span>;
+  else if(e.type==="badge") body=<span>awarded the <span className="tr">{BADGES[p.badge]?.n||p.badge}</span> badge to {target}</span>;
+  else if(e.type==="achievement") body=<span>announced: <span className="tr">{p.text}</span> — {target}</span>;
+  else body=<span>took an action</span>;
+  return <div className="ft"><span className="nm">{actorName}</span> {uni&&<span className="un">· {uni}</span>}<br/>{body}</div>;
+}
 
-  function flash(m){ setToast(m); clearTimeout(toastRef.current); toastRef.current=setTimeout(()=>setToast(""),2600); }
-
-  useEffect(() => {
-    sb.auth.getSession().then(({data})=>setSession(data.session));
-    const { data:subn } = sb.auth.onAuthStateChange((_e,s)=>setSession(s));
-    return ()=>subn.subscription.unsubscribe();
-  }, []);
-
-  const uid = session?.user?.id;
-
-  const loadMe = useCallback(async ()=>{
-    if(!uid) return;
-    const { data:p } = await sb.from("profiles").select("*").eq("id",uid).maybeSingle();
-    setMe(p);
-    const { data:pv } = await sb.from("user_private").select("*").eq("user_id",uid).maybeSingle();
-    setPriv(pv);
-  },[uid]);
-
-  const loadFeed = useCallback(async ()=>{
-    const { data } = await sb.from("activity_events")
-      .select("*, actor:profiles!activity_events_actor_id_fkey(id,name,avatar_url,badges,role), target:profiles!activity_events_target_id_fkey(name)")
-      .order("created_at",{ascending:false}).limit(60);
-    setFeed(data||[]);
-  },[]);
-
-  const loadNotifs = useCallback(async ()=>{
-    if(!uid) return;
-    const { data } = await sb.from("notifications")
-      .select("*, actor:profiles!notifications_actor_id_fkey(id,name,avatar_url,role)")
-      .eq("recipient_id",uid).order("created_at",{ascending:false}).limit(40);
-    setNotifs(data||[]);
-  },[uid]);
-
-  const loadUsers = useCallback(async (q)=>{
-    const { data } = await sb.rpc("search_users",{ q: q||"" });
-    setUsers(data||[]);
-  },[]);
-
-  useEffect(()=>{ if(uid){ loadMe(); loadFeed(); loadNotifs(); loadUsers(""); sb.from("activities").select("*").then(({data})=>setActivities(data||[])); } },[uid]);
-
-  // realtime
-  useEffect(()=>{
-    if(!uid) return;
-    const ch = sb.channel("live-"+uid)
-      .on("postgres_changes",{event:"INSERT",schema:"public",table:"activity_events"},()=>{ loadFeed(); loadMe(); })
-      .on("postgres_changes",{event:"*",schema:"public",table:"notifications",filter:`recipient_id=eq.${uid}`},()=>{ loadNotifs(); loadMe(); })
-      .subscribe();
-    return ()=>sb.removeChannel(ch);
-  },[uid,loadFeed,loadNotifs,loadMe]);
-
-  if (!session) return <Auth/>;
-  if (!me) return <div className="empty" style={{paddingTop:80}}>Loading your profile…</div>;
-
-  const unread = notifs.filter(n=>!n.read).length;
-
-  async function act(fn, okMsg){ const {data,error}=await fn(); if(error){flash(error.message);return;} if(data&&data.error){flash(errMsg(data.error,data));return;} if(okMsg)flash(okMsg); return data; }
-
-  function errMsg(code,d){
-    const map={ unavailable:"That member isn't accepting requests right now.", already_pending:"Request already pending.",
-      already_connected:"You're already connected.", not_ce_connected:"CE Connect required to send points.",
-      insufficient:"Not enough CE Points.", ignored:"They ignored a recent request — try again in 2 days.",
-      blocked:"Unavailable.", bad_amount:"Enter a valid amount." };
-    return map[code]||code;
-  }
-
+function Home({ me, priv, feed, unread, openProfile, goSub, goTab }) {
   return (
-    <div>
-      {/* HEADER */}
-      <div style={{padding:"14px 16px 4px"}} className="row between">
-        <div className="row gap">
-          <Avatar id={me.id} name={me.name} url={me.avatar_url} size={42}/>
+    <div className="content">
+      <div className="top-bar">
+        <div className="greeting">
+          <Avatar id={me.id} name={me.name} url={me.avatar_url} cls="avatar on"/>
           <div>
-            <div className="sub">Signed in as</div>
-            <div className="h2">{me.name}{me.role==="admin" && <span className="pill admin" style={{marginLeft:6}}>CE Admin</span>}</div>
+            <div className="hi">Welcome back</div>
+            <div className="name">{me.name} 👋</div>
           </div>
         </div>
-        <div className="card" style={{padding:"8px 12px",textAlign:"right"}}>
-          <div className="lbl">CE Points</div>
-          <div style={{fontSize:18,fontWeight:800,color:"#4ADE80"}}>{priv?priv.points:"—"}</div>
+        <div className="top-actions">
+          <div className="icon-btn" onClick={()=>goTab("net")}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <div className="icon-btn" onClick={()=>goTab("alerts")}>
+            {unread>0&&<span className="dot"></span>}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          </div>
         </div>
       </div>
 
-      <div className="scroll">
-        {tab==="feed" && <Feed feed={feed} me={me} openProfile={setOpenId}/>}
-        {tab==="net" && <Network users={users} query={query} setQuery={q=>{setQuery(q);loadUsers(q);}} openProfile={setOpenId}/>}
-        {tab==="apply" && <Activities activities={activities} onApply={async(a)=>{ await act(()=>sb.rpc("apply_to_activity",{activity:a.id}), `Applied to ${a.name}`); loadFeed(); }}/>}
-        {tab==="alerts" && <Alerts notifs={notifs} me={me} openProfile={setOpenId} reload={()=>{loadNotifs();loadFeed();loadUsers(query);}} flash={flash} markRead={async()=>{ await sb.from("notifications").update({read:true}).eq("recipient_id",uid).eq("read",false); loadNotifs(); }}/>}
-        {tab==="me" && <MeTab me={me} priv={priv} reload={loadMe} setPriv={setPriv} flash={flash}/>}
+      <div className="hero">
+        <div className="hero-row">
+          <div className="hero-label"><span className="pulse"></span><span>CE Points Wallet</span></div>
+          <div className="tier"><span className="tier-dot"></span><span>{me.role==="admin"?"CE Admin":"Member"}</span></div>
+        </div>
+        <div className="points">{priv?priv.points.toLocaleString():"—"}<span className="currency">CEP</span></div>
+        <div className="delta">Dummy balance for demo</div>
+        <div className="divider"></div>
+        <div className="hero-bottom">
+          <div><div className="lbl">CEID</div><div className="ce-id">{ceid(me.id)}</div></div>
+          <div className="xp-wrap"><div className="lbl">{me.university||"—"}</div><div className="xp-bar"><div className="xp-fill"></div></div></div>
+        </div>
       </div>
 
-      {/* TABBAR */}
-      <div className="tabbar">
-        {[["feed","🏠","Feed"],["net","🔍","Network"],["apply","⚡","Apply"],["alerts","🔔","Alerts"],["me","👤","Me"]].map(([k,ic,lb])=>(
-          <div key={k} className={"tab"+(tab===k?" on":"")} onClick={()=>{setTab(k); if(k==="alerts"){ setTimeout(async()=>{ await sb.from("notifications").update({read:true}).eq("recipient_id",uid).eq("read",false); loadNotifs(); },400);} }} style={{position:"relative"}}>
-            <span className="ic">{ic}</span>{lb}
-            {k==="alerts" && unread>0 && <span className="dot-red"></span>}
-          </div>
-        ))}
+      <div className="qa-row">
+        <div className="qa" onClick={()=>goSub("redeem")}><div className="qa-ic r"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M2 9V7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2"/><path d="M2 13v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4"/><path d="M12 5v14"/></svg></div><span className="qa-l">Redeem</span></div>
+        <div className="qa" onClick={()=>goSub("scan")}><div className="qa-ic s"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></div><span className="qa-l">Scan</span></div>
+        <div className="qa" onClick={()=>goSub("giveaways")}><div className="qa-ic g"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div><span className="qa-l">Giveaways</span></div>
       </div>
 
-      {openId && <ProfileModal targetId={openId} me={me} onClose={()=>setOpenId(null)} flash={flash}
-        reload={()=>{loadFeed();loadUsers(query);loadMe();loadNotifs();}}/>}
-      {toast && <div className="toast">{toast}</div>}
-    </div>
-  );
-}
-
-// ---------- FEED ----------
-function feedText(e){
-  const actor = e.actor?.role==="admin" ? "CE Admin" : (e.actor?.name || "Someone");
-  const target = e.target?.name || "a member";
-  const p = e.payload||{};
-  switch(e.type){
-    case "apply": return `${actor} applied to ${p.activity||"an activity"} ${p.emoji||""}`;
-    case "transfer": return `${actor} sent ${target} ${p.amount} CE Points`;
-    case "connect": return `${actor} CE-connected with ${target}`;
-    case "badge": return `CE Admin awarded the ${BADGES[p.badge]?.n||p.badge} badge to ${target}`;
-    case "achievement": return `${target} earned: ${p.text}`;
-    default: return `${actor} took an action`;
-  }
-}
-function timeAgo(ts){
-  const s=Math.floor((Date.now()-new Date(ts))/1000);
-  if(s<60)return "just now"; if(s<3600)return Math.floor(s/60)+"m ago";
-  if(s<86400)return Math.floor(s/3600)+"h ago"; return Math.floor(s/86400)+"d ago";
-}
-function Feed({ feed, me, openProfile }) {
-  if(!feed.length) return <div className="empty">Your network is quiet.<br/>Connect with members and their actions show up here.</div>;
-  return (
-    <div>
-      <div className="sechead"><div className="h2">Network Activity</div><div className="lbl">Live</div></div>
-      {feed.map(e=>{
-        const broad = e.visibility==="broadcast";
-        return (
-          <div key={e.id} className="card fi" onClick={()=>e.actor && e.actor.id!==me.id && openProfile(e.actor.id)}>
-            <Avatar id={e.actor?.id} name={e.actor?.role==="admin"?"CE":e.actor?.name} url={e.actor?.avatar_url} size={36}/>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:12.5,lineHeight:1.4,fontWeight:500}}>{feedText(e)}</div>
-              <div className="row between" style={{marginTop:4}}>
-                <span className="sub" style={{fontSize:10}}>{timeAgo(e.created_at)}</span>
-                {broad && <span className="pill net">Network</span>}
+      <div className="sh">
+        <div className="sh-t">My Network <span className="lv"><span className="lv-d"></span>Live</span></div>
+        <span className="sh-l" onClick={()=>goTab("net")}>Find members</span>
+      </div>
+      {!feed.length ? <div className="empty">Your network is quiet.<br/>Connect with members and their actions show up here.</div> :
+        <div className="feed">
+          {feed.map(e=>(
+            <div key={e.id} className="fi" onClick={()=>e.actor&&e.actor.id!==me.id&&openProfile(e.actor.id)}>
+              <Avatar id={e.actor?.id} name={e.actor?.role==="admin"?"CE":e.actor?.name} url={e.actor?.avatar_url} cls="fa"/>
+              <div className="fb">
+                {feedInner(e)}
+                <div className="ft-tm">{timeAgo(e.created_at)}{e.visibility==="broadcast"?" · Network":""}</div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          ))}
+        </div>}
+
+      <div className="sh"><div className="sh-t">Featured</div></div>
+      <div className="feat">
+        <div className="feat-ic">CE</div>
+        <div className="feat-tag"><span className="feat-dot"></span><span>Live</span></div>
+        <div className="feat-body">
+          <div className="feat-eb">Network Demo</div>
+          <div className="feat-tt">Connect · Transfer · Apply</div>
+          <div className="feat-mt"><span className="feat-rw">⭐ CE Connect</span><span>· try it now</span></div>
+        </div>
+      </div>
     </div>
   );
 }
 
-// ---------- NETWORK / SEARCH ----------
 function Network({ users, query, setQuery, openProfile }) {
   return (
-    <div>
-      <div className="sechead"><div className="h2">Find Members</div></div>
-      <input className="input" style={{marginTop:0}} placeholder="Search name or university…" value={query} onChange={e=>setQuery(e.target.value)}/>
-      <div style={{marginTop:12}}>
-        {!users.length && <div className="empty">No members found.</div>}
+    <div className="content">
+      <div className="page-head"><div className="page-spacer"></div><div className="page-title">Find Members</div><div className="page-spacer"></div></div>
+      <input className="auth-input" style={{marginTop:0}} placeholder="Search name or university…" value={query} onChange={e=>setQuery(e.target.value)}/>
+      <div className="feed" style={{marginTop:12}}>
+        {!users.length&&<div className="empty">No members found.</div>}
         {users.map(u=>(
-          <div key={u.id} className="card fi" onClick={()=>openProfile(u.id)}>
-            <Avatar id={u.id} name={u.name} url={u.avatar_url} size={40}/>
-            <div style={{flex:1,minWidth:0}}>
-              <div className="row between">
-                <div className="h2" style={{fontSize:14}}>{u.name}</div>
-                {u.role==="admin" && <span className="pill admin">CE Admin</span>}
-              </div>
-              <div className="sub">{u.university||"—"}</div>
+          <div key={u.id} className="fi" onClick={()=>openProfile(u.id)}>
+            <Avatar id={u.id} name={u.name} url={u.avatar_url} cls="fa"/>
+            <div className="fb">
+              <div className="ft"><span className="nm">{u.name}</span>{u.role==="admin"&&<span className="un"> · CE Admin</span>}<br/><span className="un">{u.university||"—"}</span></div>
             </div>
-            <span style={{fontSize:9,fontWeight:800,color:u.available_to_connect?"#4ADE80":"rgba(255,255,255,0.4)"}}>
-              {u.available_to_connect?"● OPEN":"○ AWAY"}
-            </span>
+            <span className="avail-tag" style={{color:u.available_to_connect?"#4ADE80":"rgba(255,255,255,0.4)"}}>{u.available_to_connect?"● OPEN":"○ AWAY"}</span>
           </div>
         ))}
       </div>
@@ -391,89 +426,73 @@ function Network({ users, query, setQuery, openProfile }) {
   );
 }
 
-// ---------- ACTIVITIES ----------
-function Activities({ activities, onApply }) {
+function Apply({ activities, onApply }) {
   return (
-    <div>
-      <div className="sechead"><div className="h2">Network Activities</div><div className="lbl">Apply anytime</div></div>
-      {activities.map(a=>(
-        <div key={a.id} className="card row between" style={{marginBottom:8}}>
-          <div className="row gap">
-            <div className="avatar" style={{width:44,height:44,fontSize:22,background:`linear-gradient(135deg,${gradFor(a.id)})`}}>{a.emoji}</div>
-            <div className="h2" style={{fontSize:14}}>{a.name}</div>
+    <div className="content">
+      <div className="page-head"><div className="page-spacer"></div><div className="page-title">Network Activities</div><div className="page-spacer"></div></div>
+      <div className="al">
+        {activities.map(a=>(
+          <div key={a.id} className="ai">
+            <div className="at-th" style={{background:`linear-gradient(${gradFor(a.id)})`}}>{a.emoji}</div>
+            <div className="ab"><div className="att">{a.name}</div><div className="as">Apply anytime · posts to your feed</div></div>
+            <button className="m-btn" style={{height:36}} onClick={()=>onApply(a)}>Apply</button>
           </div>
-          <button className="btn sm" onClick={()=>onApply(a)}>Apply</button>
-        </div>
-      ))}
-      <div className="sub" style={{textAlign:"center",marginTop:14}}>Each application posts to your network feed.</div>
+        ))}
+      </div>
+      <div className="empty" style={{fontSize:11}}>Each application logs an event to the network.</div>
     </div>
   );
 }
 
-// ---------- ALERTS ----------
 function Alerts({ notifs, me, openProfile, reload, flash }) {
-  if(!notifs.length) return <div className="empty">No notifications yet.</div>;
   return (
-    <div>
-      <div className="sechead"><div className="h2">Notifications</div></div>
-      {notifs.map(n=><AlertItem key={n.id} n={n} me={me} openProfile={openProfile} reload={reload} flash={flash}/>)}
+    <div className="content">
+      <div className="page-head"><div className="page-spacer"></div><div className="page-title">Notifications</div><div className="page-spacer"></div></div>
+      {!notifs.length ? <div className="empty">No notifications yet.</div> :
+        <div className="feed">{notifs.map(n=><AlertItem key={n.id} n={n} me={me} openProfile={openProfile} reload={reload} flash={flash}/>)}</div>}
     </div>
   );
 }
 function AlertItem({ n, me, openProfile, reload, flash }) {
-  const [choosing, setChoosing] = useState(false);
-  const [ig, setIg] = useState(false);
-  const [wa, setWa] = useState(false);
-  const a = n.actor;
-  const isReq = n.type==="connect_request";
+  const [choosing,setChoosing]=useState(false); const [ig,setIg]=useState(false); const [wa,setWa]=useState(false);
+  const a=n.actor; const isReq=n.type==="connect_request";
   const typeLabel = n.conn_type==="ce" ? "CE Connect" : "Private Connect";
-
   async function findConn(){
-    const { data } = await sb.from("connections").select("*")
-      .eq("conn_type",n.conn_type).eq("status","pending")
-      .eq("requester_id",a.id).eq("addressee_id",me.id).order("updated_at",{ascending:false}).limit(1).maybeSingle();
+    const {data}=await sb.from("connections").select("*").eq("conn_type",n.conn_type).eq("status","pending").eq("requester_id",a.id).eq("addressee_id",me.id).order("updated_at",{ascending:false}).limit(1).maybeSingle();
     return data;
   }
   async function respond(action){
-    const c = await findConn();
-    if(!c){ flash("This request is no longer active."); reload(); return; }
-    const { data } = await sb.rpc("respond_to_request",{ conn_id:c.id, action, share_ig:ig, share_wa:wa });
-    if(data&&data.error){ flash(data.error); return; }
-    flash(action==="accept"?"Connected":action==="ignore"?"Ignored":"Blocked");
-    reload();
+    const c=await findConn(); if(!c){flash("Request no longer active.");reload();return;}
+    const {data}=await sb.rpc("respond_to_request",{conn_id:c.id,action,share_ig:ig,share_wa:wa});
+    if(data&&data.error){flash(data.error);return;}
+    flash(action==="accept"?"Connected":action==="ignore"?"Ignored":"Blocked"); reload();
   }
-
   let text;
-  if(isReq) text = `${a?.name} wants to ${typeLabel} — view their profile`;
-  else if(n.type==="connect_accepted") text = `${a?.name} accepted your ${typeLabel}`;
-  else if(n.type==="points") text = `${a?.name} sent you ${n.data?.amount} CE Points`;
-  else if(n.type==="announcement") text = n.data?.badge ? `You were awarded the ${BADGES[n.data.badge]?.n||n.data.badge} badge` : `Achievement: ${n.data?.text}`;
-  else text = "Notification";
-
+  if(isReq) text=<span><b>{a?.name}</b> wants to {typeLabel} — view profile</span>;
+  else if(n.type==="connect_accepted") text=<span><b>{a?.name}</b> accepted your {typeLabel}</span>;
+  else if(n.type==="points") text=<span><b>{a?.name}</b> sent you <span className="pt">{n.data?.amount} CEP</span></span>;
+  else if(n.type==="announcement") text=n.data?.badge?<span>You earned the <span className="tr">{BADGES[n.data.badge]?.n}</span> badge</span>:<span>Achievement: <span className="tr">{n.data?.text}</span></span>;
+  else text=<span>Notification</span>;
   return (
-    <div className="card" style={{marginBottom:8,opacity:n.read?0.75:1}}>
-      <div className="fi" style={{padding:0,cursor:isReq?"pointer":"default"}} onClick={()=>isReq&&a&&openProfile(a.id)}>
-        <Avatar id={a?.id} name={a?.role==="admin"?"CE":a?.name} url={a?.avatar_url} size={36}/>
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{fontSize:12.5,fontWeight:500,lineHeight:1.4}}>{text}</div>
-          <div className="sub" style={{fontSize:10,marginTop:3}}>{timeAgo(n.created_at)}</div>
-        </div>
+    <div className="fi" style={{flexDirection:"column",alignItems:"stretch",opacity:n.read?0.8:1}}>
+      <div style={{display:"flex",alignItems:"center",gap:11,cursor:isReq?"pointer":"default"}} onClick={()=>isReq&&a&&openProfile(a.id)}>
+        <Avatar id={a?.id} name={a?.role==="admin"?"CE":a?.name} url={a?.avatar_url} cls="fa"/>
+        <div className="fb"><div className="ft">{text}</div><div className="ft-tm">{timeAgo(n.created_at)}</div></div>
       </div>
-      {isReq && (
+      {isReq&&(
         <div style={{marginTop:10}}>
-          {n.conn_type==="private" && choosing && (
-            <div className="card" style={{marginBottom:10,padding:12}}>
-              <div className="lbl" style={{marginBottom:8}}>Reveal to them</div>
-              <div className="row between" style={{marginBottom:8}}><span className="sub">Instagram</span><div className={"toggle"+(ig?" on":"")} onClick={()=>setIg(!ig)}></div></div>
-              <div className="row between"><span className="sub">WhatsApp</span><div className={"toggle"+(wa?" on":"")} onClick={()=>setWa(!wa)}></div></div>
+          {n.conn_type==="private"&&choosing&&(
+            <div className="edit-conn" style={{marginBottom:10,marginTop:0}}>
+              <div className="ec-row"><div className="ec-lbl">Reveal Instagram</div><div className={"toggle"+(ig?" on":"")} onClick={()=>setIg(!ig)}></div></div>
+              <div className="ec-row"><div className="ec-lbl">Reveal WhatsApp</div><div className={"toggle"+(wa?" on":"")} onClick={()=>setWa(!wa)}></div></div>
             </div>
           )}
-          <div className="row gap">
-            {n.conn_type==="private" && !choosing
-              ? <button className="btn green sm" style={{flex:1}} onClick={()=>setChoosing(true)}>Accept…</button>
-              : <button className="btn green sm" style={{flex:1}} onClick={()=>respond("accept")}>Accept</button>}
-            <button className="btn ghost sm" style={{flex:1}} onClick={()=>respond("ignore")}>Ignore</button>
-            <button className="btn ghost sm" style={{flex:1,color:"#FF7DA8"}} onClick={()=>respond("block")}>Block</button>
+          <div style={{display:"flex",gap:7}}>
+            {n.conn_type==="private"&&!choosing
+              ? <button className="m-btn green" style={{flex:1,padding:"9px"}} onClick={()=>setChoosing(true)}>Accept…</button>
+              : <button className="m-btn green" style={{flex:1,padding:"9px"}} onClick={()=>respond("accept")}>Accept</button>}
+            <button className="connect-btn pending" style={{flex:1,padding:"9px",fontSize:12}} onClick={()=>respond("ignore")}>Ignore</button>
+            <button className="connect-btn pending" style={{flex:1,padding:"9px",fontSize:12,color:"#FF9DBE"}} onClick={()=>respond("block")}>Block</button>
           </div>
         </div>
       )}
@@ -481,180 +500,334 @@ function AlertItem({ n, me, openProfile, reload, flash }) {
   );
 }
 
-// ---------- ME / PREFERENCES ----------
-function MeTab({ me, priv, reload, setPriv, flash }) {
-  const [ig, setIg] = useState(priv?.ig_handle||"");
-  const [wa, setWa] = useState(priv?.wa_number||"");
-  const [avail, setAvail] = useState(me.available_to_connect);
-  useEffect(()=>{ setIg(priv?.ig_handle||""); setWa(priv?.wa_number||""); },[priv]);
-
+function MeProfile({ me, priv, reload, setPriv, flash }) {
+  const [ig,setIg]=useState(priv?.ig_handle||""); const [wa,setWa]=useState(priv?.wa_number||"");
+  const [avail,setAvail]=useState(me.available_to_connect);
+  useEffect(()=>{setIg(priv?.ig_handle||"");setWa(priv?.wa_number||"");},[priv]);
   async function saveContacts(){
-    const { error } = await sb.from("user_private").update({ ig_handle:ig, wa_number:wa }).eq("user_id",me.id);
-    if(error){ flash(error.message); return; }
-    setPriv({...priv, ig_handle:ig, wa_number:wa}); flash("Contact info saved");
+    const {error}=await sb.from("user_private").update({ig_handle:ig,wa_number:wa}).eq("user_id",me.id);
+    if(error){flash(error.message);return;}
+    setPriv({...priv,ig_handle:ig,wa_number:wa}); flash("Contact info saved");
   }
   async function toggleAvail(){
     const v=!avail; setAvail(v);
-    const { error } = await sb.from("profiles").update({ available_to_connect:v }).eq("id",me.id);
-    if(error){ flash(error.message); setAvail(!v); return; }
-    reload(); flash(v?"You're open to connect":"You're set to away");
+    const {error}=await sb.from("profiles").update({available_to_connect:v}).eq("id",me.id);
+    if(error){flash(error.message);setAvail(!v);return;}
+    reload(); flash(v?"Open to connect":"Set to away");
   }
-
+  const badgeKeys=Object.keys(BADGES);
+  const earned=badgeKeys.filter(k=>me.badges&&me.badges[k]).length;
   return (
-    <div>
-      <div className="card" style={{textAlign:"center"}}>
-        <Avatar id={me.id} name={me.name} size={64} radius={20}/>
-        <div className="h1" style={{marginTop:10}}>{me.name}</div>
-        <div className="sub">{me.university||"—"} · {priv?.points} CE Points</div>
-        <BadgeRow badges={me.badges}/>
+    <div className="content">
+      <div className="page-head"><div className="page-spacer"></div><div className="page-title">Profile</div><div className="page-spacer"></div></div>
+      <div className="ph">
+        <Avatar id={me.id} name={me.name} url={me.avatar_url} cls="pa"/>
+        <div className="pn">{me.name}</div>
+        <div className="pun">{me.university||"—"}{me.role==="admin"?" · CE Admin":""}</div>
+        <div className="pcid"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>{ceid(me.id)}</div>
+      </div>
+      <div className="pst">
+        <div className="psi"><div className="psv" style={{color:"#4ADE80"}}>{priv?priv.points:"—"}</div><div className="psl">CEP</div></div>
+        <div className="psi"><div className="psv" style={{color:"#FFB547"}}>{earned}</div><div className="psl">Badges</div></div>
+        <div className="psi"><div className="psv" style={{color:"#FF3D8A"}}>{avail?"On":"Off"}</div><div className="psl">Open</div></div>
       </div>
 
-      <div className="sechead"><div className="h2">Availability</div></div>
-      <div className="card row between">
-        <div><div className="h2" style={{fontSize:13}}>Open to connect</div><div className="sub">When off, no one can send you connect requests. Badges stay visible.</div></div>
-        <div className={"toggle"+(avail?" on":"")} onClick={toggleAvail}></div>
+      <div className="sh"><div className="sh-t" style={{fontSize:14}}>Availability</div></div>
+      <div className="edit-conn" style={{marginTop:0}}>
+        <div className="ec-row"><div><div className="ec-lbl">Open to connect</div><div className="ec-sub">Off = no one can send requests. Badges stay visible.</div></div><div className={"toggle"+(avail?" on":"")} onClick={toggleAvail}></div></div>
       </div>
 
-      <div className="sechead"><div className="h2">Private Contacts</div></div>
-      <div className="card">
-        <div className="sub" style={{marginBottom:6}}>Only revealed to people you approve on a Private Connect.</div>
-        <input className="input" placeholder="Instagram @handle" value={ig} onChange={e=>setIg(e.target.value)}/>
-        <input className="input" placeholder="WhatsApp number" value={wa} onChange={e=>setWa(e.target.value)}/>
-        <button className="btn" style={{marginTop:12}} onClick={saveContacts}>Save changes</button>
+      <div className="sh"><div className="sh-t" style={{fontSize:14}}>Private Contacts</div></div>
+      <div className="card-plain">
+        <div className="ec-sub" style={{marginBottom:6}}>Only revealed to people you approve on a Private Connect.</div>
+        <input className="auth-input" placeholder="Instagram @handle" value={ig} onChange={e=>setIg(e.target.value)}/>
+        <input className="auth-input" placeholder="WhatsApp number" value={wa} onChange={e=>setWa(e.target.value)}/>
+        <button className="auth-btn" onClick={saveContacts}>Save changes</button>
       </div>
 
-      <button className="btn ghost" style={{marginTop:20}} onClick={()=>sb.auth.signOut()}>Log out</button>
+      <div className="sh"><div className="sh-t" style={{fontSize:14}}>Badges <span className="conn-count">{earned} / {badgeKeys.length}</span></div></div>
+      <div className="badge-grid">
+        {badgeKeys.map(k=>{
+          const on=me.badges&&me.badges[k];
+          return (
+            <div key={k} className={"badge"+(on?" earned":"")}>
+              {on&&<div className="badge-check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#0B0E2C" strokeWidth="4" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>}
+              <div className={"badge-ic "+k}>{BADGES[k].i}</div>
+              <div className="badge-n">{BADGES[k].n}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <button className="connect-btn pending" style={{width:"100%",marginTop:20,justifyContent:"center"}} onClick={()=>sb.auth.signOut()}>Log out</button>
     </div>
   );
 }
 
-// ---------- PROFILE MODAL ----------
+function Shell({ title, back, children }){
+  return (
+    <div className="content">
+      <div className="page-head"><div className="back-btn" onClick={back}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg></div><div className="page-title">{title}</div><div className="page-spacer"></div></div>
+      {children}
+    </div>
+  );
+}
+function Redeem({ back, points }){
+  return <Shell title="Redeem Rewards" back={back}>
+    <div className="rb"><div><div className="rb-l">Available CEP</div><div className="rb-v">{points}</div></div><div className="rb-i">⭐</div></div>
+    <div className="pills"><div className="pl act">All</div><div className="pl">Food</div><div className="pl">Tickets</div><div className="pl">Merch</div><div className="pl">Vouchers</div></div>
+    <div className="rg">
+      <div className="rc"><div className="ri r1">🍔<div className="rs">3 left</div></div><div className="rin"><div className="rb-br">Hi-Lo</div><div className="rn">J$2,000 Voucher</div><div className="rco">⭐ 800 CEP</div></div></div>
+      <div className="rc"><div className="ri r2">🎟️</div><div className="rin"><div className="rb-br">Wet Fete</div><div className="rn">VIP Ticket</div><div className="rco">⭐ 1,500 CEP</div></div></div>
+      <div className="rc"><div className="ri r3">👕</div><div className="rin"><div className="rb-br">Campus Elite</div><div className="rn">SZN6 Hoodie</div><div className="rco">⭐ 2,200 CEP</div></div></div>
+      <div className="rc"><div className="ri r4">🍹<div className="rs">Hot</div></div><div className="rin"><div className="rb-br">Campus Pub</div><div className="rn">J$1,500 Bar Tab</div><div className="rco">⭐ 600 CEP</div></div></div>
+    </div>
+    <div className="empty" style={{fontSize:11}}>Demo screen — redemption not wired.</div>
+  </Shell>;
+}
+function Scan({ back }){
+  return <Shell title="Scan Code" back={back}>
+    <p className="scn-h">Point your camera at a Campus Elite <strong>QR or promo code</strong> to claim points.</p>
+    <div className="scn"><div className="scn-fr"><div className="scn-c tl"></div><div className="scn-c tr"></div><div className="scn-c bl"></div><div className="scn-c br"></div></div></div>
+    <div className="empty" style={{fontSize:11}}>Demo screen — scanning not wired.</div>
+  </Shell>;
+}
+function Giveaways({ back }){
+  return <Shell title="Giveaways" back={back}>
+    <div className="gh"><div className="gh-eb">Mega Raffle · Closes Friday</div><div className="gh-tt">Win a MacBook Air M3</div><div className="gh-mt"><span className="gc">⭐ 100 CEP / entry</span><span className="gc">2,400 entries</span></div></div>
+    <div className="sh"><div className="sh-t" style={{fontSize:14}}>Active Raffles</div></div>
+    <div className="gl">
+      <div className="gi"><div className="gt t1">🎟️</div><div className="gb"><div className="gn">2x Wet Fete VIP</div><div className="gm">Ends in 3 days · 180 entries</div><div className="gp"><div className="gpf" style={{width:"65%"}}></div></div></div><div className="gen">Enter</div></div>
+      <div className="gi"><div className="gt t3">🎧</div><div className="gb"><div className="gn">AirPods Pro 2</div><div className="gm">Ends in 8 days · 456 entries</div><div className="gp"><div className="gpf" style={{width:"80%"}}></div></div></div><div className="gen">Enter</div></div>
+    </div>
+    <div className="empty" style={{fontSize:11}}>Demo screen — entries not wired.</div>
+  </Shell>;
+}
+
+function miniText(e){
+  const p=e.payload||{};
+  if(e.type==="apply")return `applied to ${p.activity}`;
+  if(e.type==="transfer")return `sent ${p.amount} CEP`;
+  if(e.type==="connect")return `made a CE connection`;
+  if(e.type==="badge")return `awarded ${BADGES[p.badge]?.n||p.badge}`;
+  if(e.type==="achievement")return p.text;
+  return "activity";
+}
+
 function ProfileModal({ targetId, me, onClose, flash, reload }) {
-  const [p, setP] = useState(null);
-  const [connPriv, setConnPriv] = useState(null);
-  const [amount, setAmount] = useState("");
-  const [award, setAward] = useState("varsity");
-  const [ach, setAch] = useState("");
+  const [p,setP]=useState(null); const [connPriv,setConnPriv]=useState(null);
+  const [mini,setMini]=useState([]); const [amount,setAmount]=useState("");
+  const [award,setAward]=useState("varsity"); const [ach,setAch]=useState("");
 
-  const load = useCallback(async ()=>{
-    const { data } = await sb.rpc("get_profile",{ target:targetId });
-    setP(data);
-    const { data:c } = await sb.from("connections").select("*").eq("conn_type","private")
-      .or(`and(requester_id.eq.${me.id},addressee_id.eq.${targetId}),and(requester_id.eq.${targetId},addressee_id.eq.${me.id})`)
-      .order("updated_at",{ascending:false}).limit(1).maybeSingle();
+  const load=useCallback(async()=>{
+    const {data}=await sb.rpc("get_profile",{target:targetId}); setP(data);
+    const {data:c}=await sb.from("connections").select("*").eq("conn_type","private").or(`and(requester_id.eq.${me.id},addressee_id.eq.${targetId}),and(requester_id.eq.${targetId},addressee_id.eq.${me.id})`).order("updated_at",{ascending:false}).limit(1).maybeSingle();
     setConnPriv(c);
+    if(data&&data.ce_status==="accepted"){
+      const {data:ev}=await sb.from("activity_events").select("*").eq("actor_id",targetId).order("created_at",{ascending:false}).limit(5);
+      setMini(ev||[]);
+    } else setMini([]);
   },[targetId,me.id]);
-  useEffect(()=>{ load(); },[load]);
+  useEffect(()=>{load();},[load]);
 
-  if(!p) return <div className="overlay" onClick={onClose}><div className="sheet"><div className="grab"></div><div className="empty">Loading…</div></div></div>;
-  if(p.blocked) return <div className="overlay" onClick={onClose}><div className="sheet"><div className="grab"></div><div className="empty">This profile is unavailable.</div></div></div>;
+  if(!p) return <><div className="modal-bg" onClick={onClose}></div><div className="modal-sheet"><div className="modal-handle"></div><div className="modal-body"><div className="empty">Loading…</div></div></div></>;
+  if(p.blocked) return <><div className="modal-bg" onClick={onClose}></div><div className="modal-sheet"><div className="modal-handle"></div><div className="modal-body"><div className="empty">This profile is unavailable.</div></div></div></>;
+
+  const ce=p.ce_status, pv=p.private_status;
+  const iAmReq=connPriv?.requester_id===me.id;
+  const myIg=connPriv?(iAmReq?connPriv.requester_share_ig:connPriv.addressee_share_ig):false;
+  const myWa=connPriv?(iAmReq?connPriv.requester_share_wa:connPriv.addressee_share_wa):false;
+  const badgeKeys=Object.keys(BADGES);
+  const earned=badgeKeys.filter(k=>p.badges&&p.badges[k]).length;
 
   async function req(ctype){
-    const { data } = await sb.rpc("send_connection_request",{ target:targetId, ctype });
-    if(data&&data.error){ flash({unavailable:"Not accepting requests right now.",already_pending:"Already pending.",already_connected:"Already connected.",ignored:"Ignored recently — try again in 2 days."}[data.error]||data.error); return; }
+    const {data}=await sb.rpc("send_connection_request",{target:targetId,ctype});
+    if(data&&data.error){flash({unavailable:"Not accepting requests.",already_pending:"Already pending.",already_connected:"Already connected.",ignored:"Ignored recently — try again in 2 days."}[data.error]||data.error);return;}
     flash("Request sent"); load(); reload();
   }
   async function sendPoints(){
-    const amt = parseInt(amount,10);
-    const { data } = await sb.rpc("transfer_points",{ target:targetId, amount:amt });
-    if(data&&data.error){ flash({not_ce_connected:"CE Connect required.",insufficient:"Not enough points.",bad_amount:"Enter a valid amount."}[data.error]||data.error); return; }
-    flash(`Sent ${amt} CE Points`); setAmount(""); load(); reload();
+    const amt=parseInt(amount,10);
+    const {data}=await sb.rpc("transfer_points",{target:targetId,amount:amt});
+    if(data&&data.error){flash({not_ce_connected:"CE Connect required.",insufficient:"Not enough points.",bad_amount:"Enter a valid amount."}[data.error]||data.error);return;}
+    flash(`Sent ${amt} CEP`); setAmount(""); load(); reload();
   }
   async function saveShares(field,val){
-    if(!connPriv) return;
-    const iAmReq = connPriv.requester_id===me.id;
-    const curIg = iAmReq?connPriv.requester_share_ig:connPriv.addressee_share_ig;
-    const curWa = iAmReq?connPriv.requester_share_wa:connPriv.addressee_share_wa;
-    const nextIg = field==="ig"?val:curIg, nextWa = field==="wa"?val:curWa;
-    const { data } = await sb.rpc("update_my_shares",{ conn_id:connPriv.id, share_ig:nextIg, share_wa:nextWa });
-    if(data&&data.error){ flash(data.error); return; }
+    if(!connPriv)return;
+    const nextIg=field==="ig"?val:myIg, nextWa=field==="wa"?val:myWa;
+    const {data}=await sb.rpc("update_my_shares",{conn_id:connPriv.id,share_ig:nextIg,share_wa:nextWa});
+    if(data&&data.error){flash(data.error);return;}
     load(); flash("Connection updated");
   }
-  async function awardBadge(){ const {data}=await sb.rpc("admin_award_badge",{target:targetId,badge_key:award}); if(data&&data.error){flash(data.error);return;} flash("Badge awarded"); load(); reload(); }
-  async function assignAch(){ if(!ach.trim())return; const {data}=await sb.rpc("admin_assign_achievement",{target:targetId,text_body:ach.trim()}); if(data&&data.error){flash(data.error);return;} flash("Achievement announced"); setAch(""); reload(); }
-
-  const ce = p.ce_status, pv = p.private_status;
-  const iAmReq = connPriv?.requester_id===me.id;
-  const myIg = connPriv ? (iAmReq?connPriv.requester_share_ig:connPriv.addressee_share_ig) : false;
-  const myWa = connPriv ? (iAmReq?connPriv.requester_share_wa:connPriv.addressee_share_wa) : false;
+  async function awardBadge(){ const{data}=await sb.rpc("admin_award_badge",{target:targetId,badge_key:award}); if(data&&data.error){flash(data.error);return;} flash("Badge awarded"); load(); reload(); }
+  async function assignAch(){ if(!ach.trim())return; const{data}=await sb.rpc("admin_assign_achievement",{target:targetId,text_body:ach.trim()}); if(data&&data.error){flash(data.error);return;} flash("Announced"); setAch(""); reload(); }
 
   function ceBtn(){
-    if(ce==="accepted") return <button className="btn green sm" style={{flex:1}} disabled>✓ CE Connected</button>;
-    if(ce==="pending") return <button className="btn ghost sm" style={{flex:1}} disabled>CE Pending</button>;
-    if(!p.available_to_connect) return <button className="btn ghost sm" style={{flex:1}} disabled>Not available</button>;
-    return <button className="btn sm" style={{flex:1}} onClick={()=>req("ce")}>CE Connect</button>;
+    if(ce==="accepted")return <button className="connect-btn connected">✓ CE Connected</button>;
+    if(ce==="pending")return <button className="connect-btn pending">CE Pending</button>;
+    if(!p.available_to_connect)return <button className="connect-btn pending">Not available</button>;
+    return <button className="connect-btn ce" onClick={()=>req("ce")}>CE Connect</button>;
   }
   function pvBtn(){
-    if(pv==="accepted") return <button className="btn green sm" style={{flex:1}} disabled>✓ Private</button>;
-    if(pv==="pending") return <button className="btn ghost sm" style={{flex:1}} disabled>Private Pending</button>;
-    if(!p.available_to_connect) return <button className="btn ghost sm" style={{flex:1}} disabled>Not available</button>;
-    return <button className="btn pink sm" style={{flex:1}} onClick={()=>req("private")}>Private Connect</button>;
+    if(pv==="accepted")return <button className="connect-btn connected">✓ Private</button>;
+    if(pv==="pending")return <button className="connect-btn pending">Private Pending</button>;
+    if(!p.available_to_connect)return <button className="connect-btn pending">Not available</button>;
+    return <button className="connect-btn" onClick={()=>req("private")}>Private Connect</button>;
   }
 
   return (
-    <div className="overlay" onClick={onClose}>
-      <div className="sheet" onClick={e=>e.stopPropagation()}>
-        <div className="grab"></div>
-        <div style={{textAlign:"center"}}>
-          <Avatar id={p.id} name={p.name} url={p.avatar_url} size={72} radius={22}/>
-          <div className="h1" style={{marginTop:10}}>{p.name}{p.role==="admin"&&<span className="pill admin" style={{marginLeft:6}}>CE Admin</span>}</div>
-          <div className="sub">{p.university}{p.major?` · ${p.major}`:""}</div>
+    <>
+      <div className="modal-bg" onClick={onClose}></div>
+      <div className="modal-sheet">
+        <div className="modal-handle"></div>
+        <div className="modal-close" onClick={onClose}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+        <div className="modal-body">
+          <div className="mp-hero">
+            <Avatar id={p.id} name={p.name} url={p.avatar_url} cls="mp-avatar"/>
+            <div className="mp-name">{p.name}</div>
+            <div className="mp-meta">{p.university}{p.major?<><span className="dot"></span>{p.major}</>:""}{p.role==="admin"?<><span className="dot"></span>CE Admin</>:""}</div>
+          </div>
+
+          <div className="connect-cta">{ceBtn()}{pvBtn()}</div>
+
+          {ce==="accepted"&&(
+            <div>
+              <div className="m-sh"><div className="m-sh-t">Send CE Points</div></div>
+              <div className="msend">
+                <input className="m-input" type="number" placeholder="Amount" value={amount} onChange={e=>setAmount(e.target.value)}/>
+                <button className="m-btn" onClick={sendPoints}>Send</button>
+              </div>
+            </div>
+          )}
+
+          {pv==="accepted"&&(p.ig_handle||p.wa_number)&&(
+            <div className="contact-chips">
+              {p.ig_handle&&<div className="cc-chip ig"><div className="cc-ic">📸</div><div className="cc-body"><div className="cc-l">Instagram</div><div className="cc-h">{p.ig_handle}</div></div></div>}
+              {p.wa_number&&<div className="cc-chip wa"><div className="cc-ic">💬</div><div className="cc-body"><div className="cc-l">WhatsApp</div><div className="cc-h">{p.wa_number}</div></div></div>}
+            </div>
+          )}
+
+          {ce==="accepted"&&(
+            <div>
+              <div className="m-sh"><div className="m-sh-t">Recent Activity</div><div className="m-sh-c">Last {mini.length}</div></div>
+              <div className="mini-feed">
+                {mini.length?mini.map(e=>(
+                  <div key={e.id} className="mf-item">
+                    <div className={"mf-dot "+(TYPE_ICON[e.type]||"gain")}>{e.type==="transfer"?"⇄":e.type==="apply"?"↑":e.type==="badge"||e.type==="achievement"?"★":"◆"}</div>
+                    <div className="mf-body"><div className="mf-t">{miniText(e)}</div><div className="mf-tm">{timeAgo(e.created_at)}</div></div>
+                  </div>
+                )):<div className="mf-empty">No recent activity yet</div>}
+              </div>
+            </div>
+          )}
+
+          <div className="m-sh"><div className="m-sh-t">Badges</div><div className="m-sh-c">{earned} / {badgeKeys.length}</div></div>
+          <div className="badge-grid">
+            {badgeKeys.map(k=>{
+              const on=p.badges&&p.badges[k];
+              return (
+                <div key={k} className={"badge"+(on?" earned":"")}>
+                  {on&&<div className="badge-check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#0B0E2C" strokeWidth="4" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>}
+                  <div className={"badge-ic "+k}>{BADGES[k].i}</div><div className="badge-n">{BADGES[k].n}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {pv==="accepted"&&(
+            <div>
+              <div className="m-sh"><div className="m-sh-t">Edit Connection · what you reveal</div></div>
+              <div className="edit-conn">
+                <div className="ec-row"><div><div className="ec-lbl">Show my Instagram</div><div className="ec-sub">Always your choice</div></div><div className={"toggle"+(myIg?" on":"")} onClick={()=>saveShares("ig",!myIg)}></div></div>
+                <div className="ec-row"><div><div className="ec-lbl">Show my WhatsApp</div><div className="ec-sub">Always your choice</div></div><div className={"toggle"+(myWa?" on":"")} onClick={()=>saveShares("wa",!myWa)}></div></div>
+              </div>
+            </div>
+          )}
+
+          {ce!=="accepted"&&pv!=="accepted"&&<div className="locked-note">🔒 Connect to see full profile & activity</div>}
+
+          {me.role==="admin"&&(
+            <div className="admin-box">
+              <div className="m-sh-t" style={{color:"#FFB547",marginBottom:10}}>CE Admin Controls</div>
+              <div className="msend" style={{marginBottom:10}}>
+                <select className="m-select" value={award} onChange={e=>setAward(e.target.value)}>
+                  {badgeKeys.map(k=><option key={k} value={k}>{BADGES[k].i} {BADGES[k].n}</option>)}
+                </select>
+                <button className="m-btn" onClick={awardBadge}>Award</button>
+              </div>
+              <div className="msend">
+                <input className="m-input" placeholder="Achievement text…" value={ach} onChange={e=>setAch(e.target.value)}/>
+                <button className="m-btn green" onClick={assignAch}>Announce</button>
+              </div>
+            </div>
+          )}
         </div>
-
-        <div className="row gap" style={{marginTop:16}}>{ceBtn()}{pvBtn()}</div>
-
-        {/* Transfer (CE connected) */}
-        {ce==="accepted" && (
-          <div className="card" style={{marginTop:12}}>
-            <div className="lbl" style={{marginBottom:6}}>Send CE Points</div>
-            <div className="row gap">
-              <input className="input" style={{marginTop:0}} type="number" placeholder="Amount" value={amount} onChange={e=>setAmount(e.target.value)}/>
-              <button className="btn sm" onClick={sendPoints}>Send</button>
-            </div>
-          </div>
-        )}
-
-        {/* Contacts revealed (Private connected) */}
-        {pv==="accepted" && (p.ig_handle||p.wa_number) && (
-          <div className="card" style={{marginTop:12}}>
-            <div className="lbl" style={{marginBottom:6}}>Contact</div>
-            {p.ig_handle && <div className="sub" style={{marginBottom:4}}>📸 Instagram: <b style={{color:"#F8FAFF"}}>{p.ig_handle}</b></div>}
-            {p.wa_number && <div className="sub">💬 WhatsApp: <b style={{color:"#F8FAFF"}}>{p.wa_number}</b></div>}
-          </div>
-        )}
-
-        {/* Edit Connection — my own private shares (always mine) */}
-        {pv==="accepted" && (
-          <div className="card" style={{marginTop:12}}>
-            <div className="lbl" style={{marginBottom:8}}>Edit Connection · what you reveal</div>
-            <div className="row between" style={{marginBottom:8}}><span className="sub">Show my Instagram</span><div className={"toggle"+(myIg?" on":"")} onClick={()=>saveShares("ig",!myIg)}></div></div>
-            <div className="row between"><span className="sub">Show my WhatsApp</span><div className={"toggle"+(myWa?" on":"")} onClick={()=>saveShares("wa",!myWa)}></div></div>
-          </div>
-        )}
-
-        {/* Badges */}
-        <div className="sechead" style={{marginBottom:6}}><div className="h2" style={{fontSize:14}}>Badges</div></div>
-        <BadgeRow badges={p.badges}/>
-
-        {/* Admin controls */}
-        {me.role==="admin" && (
-          <div className="card" style={{marginTop:16,border:"1px solid rgba(255,181,71,0.3)"}}>
-            <div className="lbl" style={{color:"#FFB547",marginBottom:8}}>CE Admin controls</div>
-            <div className="row gap" style={{marginBottom:10}}>
-              <select className="input" style={{marginTop:0}} value={award} onChange={e=>setAward(e.target.value)}>
-                {Object.keys(BADGES).map(k=><option key={k} value={k}>{BADGES[k].i} {BADGES[k].n}</option>)}
-              </select>
-              <button className="btn sm" onClick={awardBadge}>Award</button>
-            </div>
-            <div className="row gap">
-              <input className="input" style={{marginTop:0}} placeholder="Achievement text…" value={ach} onChange={e=>setAch(e.target.value)}/>
-              <button className="btn sm green" onClick={assignAch}>Announce</button>
-            </div>
-          </div>
-        )}
-
-        <button className="btn ghost" style={{marginTop:18}} onClick={onClose}>Close</button>
       </div>
+    </>
+  );
+}
+
+function App() {
+  const [session,setSession]=useState(null);
+  const [me,setMe]=useState(null); const [priv,setPriv]=useState(null);
+  const [tab,setTab]=useState("home"); const [sub,setSub]=useState(null);
+  const [feed,setFeed]=useState([]); const [notifs,setNotifs]=useState([]);
+  const [activities,setActivities]=useState([]); const [users,setUsers]=useState([]);
+  const [query,setQuery]=useState(""); const [openId,setOpenId]=useState(null);
+  const [toast,setToast]=useState(""); const tr=useRef();
+  function flash(m){setToast(m);clearTimeout(tr.current);tr.current=setTimeout(()=>setToast(""),2600);}
+
+  useEffect(()=>{ sb.auth.getSession().then(({data})=>setSession(data.session)); const {data:s}=sb.auth.onAuthStateChange((_e,ss)=>setSession(ss)); return ()=>s.subscription.unsubscribe(); },[]);
+  const uid=session?.user?.id;
+
+  const loadMe=useCallback(async()=>{ if(!uid)return; const{data:p}=await sb.from("profiles").select("*").eq("id",uid).maybeSingle(); setMe(p); const{data:pv}=await sb.from("user_private").select("*").eq("user_id",uid).maybeSingle(); setPriv(pv); },[uid]);
+  const loadFeed=useCallback(async()=>{ const{data}=await sb.from("activity_events").select("*, actor:profiles!activity_events_actor_id_fkey(id,name,avatar_url,badges,role,university), target:profiles!activity_events_target_id_fkey(name)").order("created_at",{ascending:false}).limit(60); setFeed(data||[]); },[]);
+  const loadNotifs=useCallback(async()=>{ if(!uid)return; const{data}=await sb.from("notifications").select("*, actor:profiles!notifications_actor_id_fkey(id,name,avatar_url,role)").eq("recipient_id",uid).order("created_at",{ascending:false}).limit(40); setNotifs(data||[]); },[uid]);
+  const loadUsers=useCallback(async(q)=>{ const{data}=await sb.rpc("search_users",{q:q||""}); setUsers(data||[]); },[]);
+
+  useEffect(()=>{ if(uid){ loadMe(); loadFeed(); loadNotifs(); loadUsers(""); sb.from("activities").select("*").then(({data})=>setActivities(data||[])); } },[uid]);
+  useEffect(()=>{ if(!uid)return; const ch=sb.channel("live-"+uid)
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"activity_events"},()=>{loadFeed();loadMe();})
+    .on("postgres_changes",{event:"*",schema:"public",table:"notifications",filter:`recipient_id=eq.${uid}`},()=>{loadNotifs();loadMe();})
+    .subscribe(); return ()=>sb.removeChannel(ch); },[uid,loadFeed,loadNotifs,loadMe]);
+
+  if(!session) return <Auth/>;
+  if(!me) return <div className="empty" style={{paddingTop:80}}>Loading your profile…</div>;
+  const unread=notifs.filter(n=>!n.read).length;
+
+  async function markAlertsRead(){ await sb.from("notifications").update({read:true}).eq("recipient_id",uid).eq("read",false); loadNotifs(); }
+  function goTab(t){ setSub(null); setTab(t); if(t==="alerts") setTimeout(markAlertsRead,600); }
+
+  let screen;
+  if(sub==="redeem") screen=<Redeem back={()=>setSub(null)} points={priv?priv.points:0}/>;
+  else if(sub==="scan") screen=<Scan back={()=>setSub(null)}/>;
+  else if(sub==="giveaways") screen=<Giveaways back={()=>setSub(null)}/>;
+  else if(tab==="home") screen=<Home me={me} priv={priv} feed={feed} unread={unread} openProfile={setOpenId} goSub={setSub} goTab={goTab}/>;
+  else if(tab==="net") screen=<Network users={users} query={query} setQuery={q=>{setQuery(q);loadUsers(q);}} openProfile={setOpenId}/>;
+  else if(tab==="apply") screen=<Apply activities={activities} onApply={async(a)=>{const{data}=await sb.rpc("apply_to_activity",{activity:a.id}); if(data&&data.error){flash(data.error);return;} flash(`Applied to ${a.name}`); loadFeed();}}/>;
+  else if(tab==="alerts") screen=<Alerts notifs={notifs} me={me} openProfile={setOpenId} reload={()=>{loadNotifs();loadFeed();loadUsers(query);}} flash={flash}/>;
+  else if(tab==="me") screen=<MeProfile me={me} priv={priv} reload={loadMe} setPriv={setPriv} flash={flash}/>;
+
+  const ICON = {
+    home:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>,
+    net:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+    alerts:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>,
+    me:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>,
+  };
+
+  return (
+    <div>
+      {screen}
+      <div className="bn">
+        <div className="nb">
+          <div className={"ni"+(tab==="home"&&!sub?" act":"")} onClick={()=>goTab("home")}><div className="ni-bg">{ICON.home}</div><span>Home</span></div>
+          <div className={"ni"+(tab==="net"&&!sub?" act":"")} onClick={()=>goTab("net")}><div className="ni-bg">{ICON.net}</div><span>Network</span></div>
+          <div className="ns" onClick={()=>goTab("apply")}><svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M13 2 3 14h7v8l10-12h-7z"/></svg></div>
+          <div className={"ni"+(tab==="alerts"&&!sub?" act":"")} onClick={()=>goTab("alerts")}><div className="ni-bg">{ICON.alerts}{unread>0&&<span className="nd"></span>}</div><span>Alerts</span></div>
+          <div className={"ni"+(tab==="me"&&!sub?" act":"")} onClick={()=>goTab("me")}><div className="ni-bg">{ICON.me}</div><span>Profile</span></div>
+        </div>
+      </div>
+      {openId&&<ProfileModal targetId={openId} me={me} onClose={()=>setOpenId(null)} flash={flash} reload={()=>{loadFeed();loadUsers(query);loadMe();loadNotifs();}}/>}
+      {toast&&<div className="toast">{toast}</div>}
     </div>
   );
 }
